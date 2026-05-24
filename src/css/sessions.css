@@ -1,0 +1,73 @@
+.session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.session-item {
+    background: var(--surface2);
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    position: relative;
+}
+
+.session-item:hover {
+    border-color: var(--border);
+    background: var(--surface3);
+}
+
+.session-item.editable:hover .session-actions {
+    opacity: 1;
+}
+
+.session-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+}
+
+.session-text {
+    flex: 1;
+}
+
+.session-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.session-item.editable:hover .session-actions {
+    opacity: 1;
+}
+
+/* SESSION EDIT MODAL */
+.session-edit-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: all 0.15s;
+    font-family: inherit;
+    margin-bottom: 12px;
+}
+
+.session-edit-input:focus {
+    border-color: var(--accent);
+    background: var(--surface3);
+}

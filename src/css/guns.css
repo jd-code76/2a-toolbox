@@ -1,0 +1,199 @@
+/* GUN CARDS */
+.gun-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+}
+
+.gun-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+}
+
+.gun-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.gun-card-header {
+    padding: 16px 18px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.gun-card-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+}
+
+.gun-card-meta {
+    font-size: 12px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gun-card-meta i { font-size: 10px; }
+
+.gun-type-badge {
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.type-pistol { background: rgba(100, 181, 246, 0.15); color: var(--blue); }
+.type-rifle { background: rgba(129, 199, 132, 0.15); color: var(--green); }
+.type-shotgun { background: rgba(255, 183, 77, 0.15); color: var(--orange); }
+.type-sold { background: rgba(229, 115, 115, 0.15); color: var(--red); }
+.type-other { background: rgba(156, 156, 156, 0.15); color: var(--text2); }
+
+.gun-card-stats {
+    padding: 12px 18px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+}
+
+.gun-stat-item { text-align: center; }
+
+.gun-stat-val {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.gun-stat-lbl {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* DETAIL */
+.detail-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+.detail-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.detail-sub {
+    font-size: 13px;
+    color: var(--text2);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+}
+
+.info-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 14px;
+}
+
+.info-row:last-child { border-bottom: none; }
+
+.info-label {
+    font-size: 12px;
+    color: var(--text3);
+    min-width: 120px;
+    padding-top: 2px;
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
+}
+
+/* SOLD BANNER */
+.sold-banner {
+    background: rgba(229, 115, 115, 0.15);
+    border: 1px solid var(--red);
+    color: var(--red);
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.sold-banner i { font-size: 16px; }
+
+/* MODS LIST */
+.mods-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mod-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text2);
+    padding: 6px 0;
+}
+
+.mod-item i {
+    color: var(--accent);
+    font-size: 8px;
+}
+
+/* OPTIC */
+.optic-badge {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.optic-name {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.optic-mag {
+    color: var(--text3);
+}

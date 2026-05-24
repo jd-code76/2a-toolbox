@@ -1,0 +1,19 @@
+{
+    "id": "/2a-toolbox/",
+    "name": "2A Toolbox - Arsenal Management System",
+    "short_name": "2A Toolbox",
+    "description": "Secure, offline-first management for your firearms, ammunition, and range sessions.",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#0a0e14",
+    "theme_color": "#0a0e14",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "favicon.ico",
+            "sizes": "64x64 32x32 24x24 16x16",
+            "type": "image/x-icon"
+        }
+    ]
+}

@@ -1,0 +1,77 @@
+/* STATS */
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    transition: all 0.15s;
+}
+
+.stat-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.stat-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 4px;
+}
+
+.stat-accent { color: var(--accent); }
+
+/* CALIBER GROUP */
+.caliber-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.caliber-row:last-child { border-bottom: none; }
+
+.caliber-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.caliber-bar-wrap {
+    flex: 2;
+    background: var(--surface2);
+    border-radius: 6px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.caliber-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-dark), var(--accent));
+    border-radius: 6px;
+    transition: width 0.6s ease;
+}
+
+.caliber-count {
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 50px;
+    text-align: right;
+    color: var(--accent);
+}

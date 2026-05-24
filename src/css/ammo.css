@@ -1,0 +1,64 @@
+/* AMMO */
+.ammo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.ammo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+}
+
+.ammo-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.ammo-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.ammo-cal {
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.ammo-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ammo-detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+}
+
+.ammo-detail-row span:first-child { color: var(--text3); }
+.ammo-detail-row span:last-child { color: var(--text2); }
+
+.ammo-rounds {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 10px;
+}
+
+.ammo-rounds-lbl {
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
