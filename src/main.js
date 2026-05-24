@@ -31,7 +31,7 @@ import {
 } from './modules/ammo-deduction.js';
 
 // APP_VERSION is used by renderers.js for about section
-export const APP_VERSION = '1.0.0'
+export const APP_VERSION = '1.0.1'
 
 /**
  * Register service worker for offline functionality
@@ -55,17 +55,6 @@ if ('serviceWorker' in navigator) {
                 }
             });
         })
-        .catch(err => console.log('Service Worker registration failed:', err));
-    });
-}
-
-/**
- * Register service worker for offline functionality
- */
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('Service Worker registered'))
         .catch(err => console.log('Service Worker registration failed:', err));
     });
 }

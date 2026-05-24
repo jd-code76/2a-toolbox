@@ -1,27 +1,27 @@
 const CORE_ASSETS = [
-    './',
-'./index.html',
-'./main.js',
-'./sw.js',
-'./styles.css',
-'./manifest.json',
-'./modules/ammo.js',
-'./modules/ammo-deduction.js',
-'./modules/database.js',
-'./modules/events.js',
-'./modules/guns.js',
-'./modules/import-export.js',
-'./modules/navigation.js',
-'./modules/renderers.js',
-'./modules/sessions.js',
-'./modules/state.js',
-'./modules/utils.js',
-'/favicons/apple-touch-icon.png',
-'/favicons/favicon.png',
-'/favicons/favicon-16x16.png',
-'/favicons/favicon-32x32.png',
-'/favicons/favicon-192x192.png',
-'/favicons/favicon-512x512.png',
+    '/',
+    '/index.html',
+    '/main.js',
+    '/sw.js',
+    '/styles.css',
+    '/manifest.json',
+    '/modules/ammo.js',
+    '/modules/ammo-deduction.js',
+    '/modules/database.js',
+    '/modules/events.js',
+    '/modules/guns.js',
+    '/modules/import-export.js',
+    '/modules/navigation.js',
+    '/modules/renderers.js',
+    '/modules/sessions.js',
+    '/modules/state.js',
+    '/modules/utils.js',
+    '/favicons/apple-touch-icon.png',
+    '/favicons/favicon.png',
+    '/favicons/favicon-16x16.png',
+    '/favicons/favicon-32x32.png',
+    '/favicons/favicon-192x192.png',
+    '/favicons/favicon-512x512.png'
 ];
 
 const CDN_ASSETS = [
@@ -60,7 +60,7 @@ async function preCacheCoreAssets() {
 
         console.log('Core assets cached under', CURRENT_CACHE);
     } catch (err) {
-        console.error('Failed to pre-cache core assets', err);
+        console.error('Failed to pre-cache core assets:', err);
     }
 }
 
@@ -79,9 +79,9 @@ self.addEventListener('activate', evt => {
             const names = await caches.keys();
             await Promise.all(
                 names.map(name =>
-                name !== expected && name.startsWith('2atoolbox-cache-v')
-                ? caches.delete(name)
-                : null
+                    name !== expected && name.startsWith('2atoolbox-cache-v')
+                        ? caches.delete(name)
+                        : null
                 )
             );
             await self.clients.claim();
@@ -101,14 +101,14 @@ self.addEventListener('fetch', evt => {
     if (evt.request.mode === 'navigate') {
         evt.respondWith(
             fetch(evt.request)
-            .then(resp => {
-                if (shouldCache(evt.request, resp)) {
-                    const copy = resp.clone();
-                    caches.open(CURRENT_CACHE).then(c => c.put(evt.request, copy));
-                }
-                return resp;
-            })
-            .catch(() => caches.match(evt.request).then(c => c || caches.match('./index.html')))
+                .then(resp => {
+                    if (shouldCache(evt.request, resp)) {
+                        const copy = resp.clone();
+                        caches.open(CURRENT_CACHE).then(c => c.put(evt.request, copy));
+                    }
+                    return resp;
+                })
+                .catch(() => caches.match(evt.request).then(c => c || caches.match('./index.html')))
         );
         return;
     }
@@ -117,14 +117,14 @@ self.addEventListener('fetch', evt => {
     if (isCDN) {
         evt.respondWith(
             fetch(evt.request)
-            .then(resp => {
-                if (resp.ok) {
-                    const copy = resp.clone();
-                    caches.open(CURRENT_CACHE).then(c => c.put(evt.request, copy));
-                }
-                return resp;
-            })
-            .catch(() => caches.match(evt.request))
+                .then(resp => {
+                    if (resp.ok) {
+                        const copy = resp.clone();
+                        caches.open(CURRENT_CACHE).then(c => c.put(evt.request, copy));
+                    }
+                    return resp;
+                })
+                .catch(() => caches.match(evt.request))
         );
         return;
     }
@@ -132,14 +132,14 @@ self.addEventListener('fetch', evt => {
     // For all other GET requests
     evt.respondWith(
         fetch(evt.request)
-        .then(resp => {
-            if (shouldCache(evt.request, resp)) {
-                const copy = resp.clone();
-                caches.open(CURRENT_CACHE).then(c => c.put(evt.request, copy));
-            }
-            return resp;
-        })
-        .catch(() => caches.match(evt.request))
+            .then(resp => {
+                if (shouldCache(evt.request, resp)) {
+                    const copy = resp.clone();
+                    caches.open(CURRENT_CACHE).then(c => c.put(evt.request, copy));
+                }
+                return resp;
+            })
+            .catch(() => caches.match(evt.request))
     );
 });
 
