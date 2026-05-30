@@ -1,4 +1,4 @@
-# Access the app here: [https://2atoolbox.infinityfreeapp.com](https://2atoolbox.infinityfreeapp.com)
+# Access the app here: [https://2a-toolbox.jordan-depo.workers.dev](https://2a-toolbox.jordan-depo.workers.dev)
 
 # 2A Toolbox
 
