@@ -1,22 +1,13 @@
 'use strict';
-
 import { state } from './state.js';
 import { escapeHtml, getTypeIcon, getUniqueCalibers, parseSessionDate } from './utils.js';
-import { APP_VERSION } from '../main.js'; // Import APP_VERSION
-
-/**
- * Render dashboard page with statistics and overview
- * @returns {string} HTML string for dashboard
- */
+import { APP_VERSION } from '../main.js'; 
 export function renderDashboard() {
-    // Calculate statistics
     const totalShots = state.guns.reduce((sum, gun) => sum + gun.shots, 0);
     const totalCleanings = state.guns.reduce((sum, gun) => sum + gun.cleanings, 0);
     const totalRangeSessions = state.guns.reduce((sum, gun) => sum + gun.rangeSessions.length, 0);
     const totalAmmoRounds = state.ammo.reduce((sum, ammo) => sum + ammo.rounds, 0);
     const mostUsedGun = [...state.guns].sort((a, b) => b.shots - a.shots)[0];
-
-    // Group ammo by caliber
     const caliberMap = {};
     state.ammo.forEach(ammo => {
         const caliber = ammo.caliber || 'Unknown';
@@ -24,17 +15,13 @@ export function renderDashboard() {
     });
     const caliberEntries = Object.entries(caliberMap)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 8); // Top 8 calibers
+    .slice(0, 8); 
     const maxCaliberCount = caliberEntries[0]?.[1] || 1;
-
-    // Count guns by type
     const typeCount = {};
     state.guns.forEach(gun => {
         const type = gun.type || 'other';
         typeCount[type] = (typeCount[type] || 0) + 1;
     });
-
-    // Get recent range sessions
     const allSessions = [];
     state.guns.forEach(gun => {
         gun.rangeSessions.forEach(session => {
@@ -48,7 +35,6 @@ export function renderDashboard() {
     const recentSessions = allSessions
     .sort((a, b) => b.date - a.date)
     .slice(0, 8);
-
     return `
     <div class="topbar">
     <button class="mobile-menu-btn" onclick="window.app.toggleMobileMenu()">
@@ -63,7 +49,6 @@ export function renderDashboard() {
     </button>
     </div>
     </div>
-
     <div class="content">
     <!-- Statistics Cards -->
     <div class="grid-4" style="margin-bottom:22px">
@@ -88,7 +73,6 @@ export function renderDashboard() {
     <div class="stat-sub">${state.ammo.length} entries</div>
     </div>
     </div>
-
     <!-- Charts Section -->
     <div class="grid-2" style="margin-bottom:22px">
     <!-- Ammo Inventory Chart -->
@@ -109,7 +93,6 @@ export function renderDashboard() {
         `).join('')
     }
     </div>
-
     <!-- Fleet Overview -->
     <div class="card">
     <div class="card-title">
@@ -125,7 +108,6 @@ export function renderDashboard() {
         <span style="font-size:20px;font-weight:700;color:var(--accent)">${count}</span>
         </div>
         `).join('')}
-
         ${mostUsedGun ? `
             <div style="margin-top:16px;padding:14px;background:var(--surface2);border-radius:var(--radius-sm)">
             <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600;letter-spacing:0.5px">
@@ -139,7 +121,6 @@ export function renderDashboard() {
             ` : ''}
             </div>
             </div>
-
             <!-- Recent Sessions -->
             <div class="card">
             <div class="card-title">
@@ -163,15 +144,9 @@ export function renderDashboard() {
             </div>
             `;
 }
-
-/**
- * Render firearms inventory page
- * @returns {string} HTML string for guns page
- */
 export function renderGuns() {
     const allGuns = [...state.guns, ...state.soldGuns].sort((a, b) => a.name.localeCompare(b.name));
     const displayGuns = state.hideSold ? allGuns.filter(gun => !gun.sold) : allGuns;
-
     return `
     <div class="topbar">
     <button class="mobile-menu-btn" onclick="window.app.toggleMobileMenu()">
@@ -191,7 +166,6 @@ export function renderGuns() {
     </button>
     </div>
     </div>
-
     <div class="content">
     <!-- Filter Bar -->
     <div class="filter-bar" id="gun-filter-bar">
@@ -216,7 +190,6 @@ export function renderGuns() {
     <i class="fas fa-eye-slash"></i> Hide Sold
     </div>
     </div>
-
     <!-- Gun Grid -->
     <div class="gun-grid" id="gun-grid">
     ${displayGuns.map(renderGunCard).join('')}
@@ -224,17 +197,10 @@ export function renderGuns() {
     </div>
     `;
 }
-
-/**
- * Render individual gun card
- * @param {Object} gun - Gun object to render
- * @returns {string} HTML string for gun card
- */
 export function renderGunCard(gun) {
     const typeClass = gun.sold ? 'type-sold' : `type-${(gun.type || 'other').toLowerCase()}`;
     const typeLabel = gun.sold ? 'SOLD' : gun.type || 'Other';
     const typeIcon = gun.sold ? '<i class="fas fa-ban"></i> ' : getTypeIcon(gun.type || '');
-
     return `
     <div class="gun-card" data-gun-id="${gun.id}">
     <div class="gun-card-header">
@@ -269,19 +235,12 @@ export function renderGunCard(gun) {
     </div>
     `;
 }
-
-/**
- * Render ammunition inventory page
- * @returns {string} HTML string for ammo page
- */
 export function renderAmmo() {
     const calibers = getUniqueCalibers(state.ammo);
     const filterChips = calibers.map(caliber =>
     `<div class="filter-chip" data-filter="${escapeHtml(caliber)}">${caliber}</div>`
     ).join('');
-
     const sortedAmmo = [...state.ammo].sort((a, b) => a.brand.localeCompare(b.brand));
-
     return `
     <div class="topbar">
     <button class="mobile-menu-btn" onclick="window.app.toggleMobileMenu()">
@@ -301,7 +260,6 @@ export function renderAmmo() {
     </button>
     </div>
     </div>
-
     <div class="content">
     <!-- Filter Bar -->
     <div class="filter-bar" id="ammo-filter-bar">
@@ -318,7 +276,6 @@ export function renderAmmo() {
     <i class="fas fa-times"></i> Empty
     </div>
     </div>
-
     <!-- Ammo Grid -->
     <div class="ammo-grid" id="ammo-grid">
     ${sortedAmmo.map(renderAmmoCard).join('')}
@@ -326,16 +283,8 @@ export function renderAmmo() {
     </div>
     `;
 }
-
-/**
- * Render individual ammo card
- * @param {Object} ammo - Ammo object to render
- * @returns {string} HTML string for ammo card
- */
 export function renderAmmoCard(ammo) {
     const rounds = Number(ammo.rounds) || 0;
-
-    // Determine status pill
     let statusPill;
     if (rounds === 0) {
         statusPill = '<span class="pill pill-red"><i class="fas fa-times"></i> Empty</span>';
@@ -344,7 +293,6 @@ export function renderAmmoCard(ammo) {
     } else {
         statusPill = '<span class="pill pill-green"><i class="fas fa-check"></i> Stocked</span>';
     }
-
     return `
     <div class="ammo-card" data-ammo-id="${ammo.id}">
     <div class="ammo-name">${ammo.brand}</div>
@@ -375,15 +323,8 @@ export function renderAmmoCard(ammo) {
         </div>
         `;
 }
-
-/**
- * Render range sessions page
- * @returns {string} HTML string for sessions page
- */
 export function renderSessions() {
     const allSessions = [];
-
-    // Collect all range sessions from guns
     state.guns.forEach(gun => {
         gun.rangeSessions.forEach(session => {
             allSessions.push({
@@ -395,10 +336,7 @@ export function renderSessions() {
             });
         });
     });
-
-    // Sort by date (newest first)
     allSessions.sort((a, b) => b.date - a.date);
-
     return `
     <div class="topbar">
     <button class="mobile-menu-btn" onclick="window.app.toggleMobileMenu()">
@@ -408,7 +346,6 @@ export function renderSessions() {
     <i class="fas fa-calendar-alt"></i> Range Sessions
     </div>
     </div>
-
     <div class="content">
     <div class="card">
     ${allSessions.length === 0
@@ -438,15 +375,8 @@ export function renderSessions() {
     </div>
     `;
 }
-
-/**
- * Render cleanings log page
- * @returns {string} HTML string for cleanings page
- */
 export function renderCleanings() {
     const allCleanings = [];
-
-    // Collect all cleaning sessions from guns
     state.guns.forEach(gun => {
         gun.cleaningSessions.forEach(session => {
             allCleanings.push({
@@ -457,10 +387,7 @@ export function renderCleanings() {
             });
         });
     });
-
-    // Sort by date (newest first)
     allCleanings.sort((a, b) => b.date - a.date);
-
     return `
     <div class="topbar">
     <button class="mobile-menu-btn" onclick="window.app.toggleMobileMenu()">
@@ -470,7 +397,6 @@ export function renderCleanings() {
     <i class="fas fa-spray-can"></i> Cleaning Log
     </div>
     </div>
-
     <div class="content">
     <div class="card">
     ${allCleanings.length === 0
@@ -494,11 +420,6 @@ export function renderCleanings() {
     </div>
     `;
 }
-
-/**
- * Render import/export page
- * @returns {string} HTML string for import page
- */
 export function renderImport() {
     return `
     <div class="topbar">
@@ -509,7 +430,6 @@ export function renderImport() {
     <i class="fas fa-file-import"></i> Import / Export
     </div>
     </div>
-
     <div class="content">
     <div class="grid-2">
     <!-- Import Section -->
@@ -520,7 +440,6 @@ export function renderImport() {
     <p style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6">
     Import a JSON backup file. Existing records with matching IDs will be replaced.
     </p>
-
     <!-- Drop Zone -->
     <div class="drop-zone" id="drop-zone">
     <i class="fas fa-cloud-upload-alt"></i>
@@ -529,7 +448,6 @@ export function renderImport() {
     </div>
     <input type="file" id="file-input" accept=".json" style="display:none">
     </div>
-
     <!-- Export Section -->
     <div class="card">
     <div class="card-title">
@@ -541,7 +459,6 @@ export function renderImport() {
     <button class="btn btn-primary" onclick="window.app.exportData()">
     <i class="fas fa-download"></i> Export Backup
     </button>
-
     <!-- Data Summary -->
     <div style="margin-top:26px">
     <div class="card-title">
@@ -566,7 +483,6 @@ export function renderImport() {
     </span>
     </div>
     </div>
-
     <!-- Danger Zone -->
     <div style="margin-top:26px">
     <div class="card-title" style="color:var(--red)">
@@ -584,11 +500,6 @@ export function renderImport() {
     </div>
     `;
 }
-
-/**
- * Render about page
- * @returns {string} HTML string for about page
- */
 export function renderAbout() {
     return `
     <div class="topbar">
@@ -599,13 +510,11 @@ export function renderAbout() {
     <i class="fas fa-info-circle"></i> About
     </div>
     </div>
-
     <div class="content">
     <div class="card" style="max-width:600px;margin:0 auto;">
     <div class="card-title">
     <i class="fas fa-crosshairs"></i> 2A Toolbox
     </div>
-
     <!-- Version Info -->
     <div style="margin-bottom:24px;">
     <div style="font-size:32px;font-weight:700;color:var(--accent);margin-bottom:8px;">
@@ -616,7 +525,6 @@ export function renderAbout() {
     range sessions, and maintenance records.
     </div>
     </div>
-
     <!-- Author Section -->
     <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:20px;">
     <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">
@@ -633,7 +541,6 @@ export function renderAbout() {
     <i class="fab fa-github"></i> View on GitHub
     </a>
     </div>
-
     <!-- Features Section -->
     <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:20px;">
     <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">
@@ -674,7 +581,6 @@ export function renderAbout() {
     </li>
     </ul>
     </div>
-
     <!-- Technology Section -->
     <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:20px;">
     <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">
@@ -686,7 +592,6 @@ export function renderAbout() {
     optimized for desktop and mobile devices.
     </div>
     </div>
-
     <!-- Attributions Section -->
     <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:20px;">
     <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">
@@ -711,7 +616,6 @@ export function renderAbout() {
     class="about-link">Cloudflare Pages</a>.
     </div>
     </div>
-
     <!-- License -->
     <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:20px;text-align:center;font-size:12px;color:var(--text3);line-height:1.6;">
     2A Toolbox is free, open source software licensed under

@@ -17,6 +17,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; font-src 'self' https://cdn.jsdelivr.net; img-src 'self'; manifest-src 'self'; connect-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'none'">
     <title>2A Toolbox</title>
     <link rel="icon" type="image/x-icon" href="/favicons/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
@@ -72,7 +73,7 @@
 
     <!-- MODALS -->
     <div class="modal-overlay" id="gun-modal">
-        <div class="modal" style="max-width:700px">
+        <div class="modal modal-lg">
             <div class="modal-header">
                 <div class="modal-title" id="gun-modal-title">Add Firearm</div>
                 <button class="modal-close" data-modal="gun-modal"><i class="fas fa-times"></i></button>
@@ -92,7 +93,7 @@
     </div>
 
     <div class="modal-overlay" id="detail-modal">
-        <div class="modal" style="max-width:900px; max-height:90vh">
+        <div class="modal modal-xl">
             <div class="modal-header">
                 <div class="modal-title" id="detail-modal-title">Firearm Details</div>
                 <button class="modal-close" data-modal="detail-modal"><i class="fas fa-times"></i></button>
@@ -114,7 +115,7 @@
     </div>
 
     <div class="modal-overlay" id="confirm-modal">
-        <div class="modal" style="max-width:420px">
+        <div class="modal modal-sm">
             <div class="modal-header">
                 <div class="modal-title">Confirm Action</div>
                 <button class="modal-close" data-modal="confirm-modal"><i class="fas fa-times"></i></button>
@@ -124,7 +125,7 @@
     </div>
 
     <div class="modal-overlay" id="session-modal">
-        <div class="modal" style="max-width:520px">
+        <div class="modal modal-md">
             <div class="modal-header">
                 <div class="modal-title" id="session-modal-title">Log Session</div>
                 <button class="modal-close" data-modal="session-modal"><i class="fas fa-times"></i></button>
@@ -135,7 +136,7 @@
     </div>
 
     <div class="modal-overlay" id="session-edit-modal">
-        <div class="modal" style="max-width:480px">
+        <div class="modal modal-md-alt">
             <div class="modal-header">
                 <div class="modal-title" id="session-edit-modal-title">Edit Session</div>
                 <button class="modal-close" data-modal="session-edit-modal"><i class="fas fa-times"></i></button>
@@ -146,7 +147,7 @@
     </div>
 
     <div class="modal-overlay" id="ammo-select-modal">
-        <div class="modal" style="max-width:520px">
+        <div class="modal modal-md">
             <div class="modal-header">
                 <div class="modal-title">Deduct Ammunition</div>
                 <button class="modal-close" data-modal="ammo-select-modal"><i class="fas fa-times"></i></button>

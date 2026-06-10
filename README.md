@@ -45,14 +45,15 @@
 
 2A Toolbox is built for those who value privacy:
 
-*   **No Cloud:** There is no "back-end." Your data never leaves your device unless you manually export it.
-*   **No Tracking:** 2A Toolbox does not use analytics, tracking pixels, or remote scripts. The only remote call is for Font Awesome icons via `cdn.jsdelivr.net`, which is handled via https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css in the source code.
+*   **No Cloud:** This app is hosted on Cloudflare Pages, but the application stores all user data locally in the browser (IndexedDB/PWA). There is no "back-end."; your data never leaves your device unless you manually export it.
+*   **No Tracking:** 2A Toolbox does not use analytics, tracking pixels, or remote scripts. The only remote call is for Font Awesome icons via `cdn.jsdelivr.net`, which is handled via https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css in the source code. 
 
 
 ## Attribution
 
 - Inspired by [David Cabal's Gun Tracker](https://github.com/DavidCabal/gun-tracker-downloads/tree/main)
 - Icons by [Font Awesome](https://fontawesome.com)
+- Hosted using [Cloudflare Pages](https://pages.cloudflare.com)
 
 ## License
 
