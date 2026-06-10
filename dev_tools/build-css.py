@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
 CSS Concatenator and Minifier for Provinent Scripture Study
-Usage: python3 build_css.py [--no-minify]
+Usage: python3 build-css.py [--no-minify]
 """
 
 import os
 import sys
 import argparse
-import shutil
-from datetime import datetime
 import re
 
 def remove_css_comments(css_content):
@@ -134,16 +132,6 @@ def main():
 
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
-
-    # Backup existing file if it exists
-    if os.path.exists(output_path):
-        backup_dir = os.path.join(source_dir, "backups")
-        os.makedirs(backup_dir, exist_ok=True)
-
-        backup_file_name = f"styles.css.backup.{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-        backup_path = os.path.join(backup_dir, backup_file_name)
-        shutil.copy2(output_path, backup_path)
-        print(f"\033[33mBacked up existing file to: {backup_path}\033[0m")
 
     # Track statistics
     total_original_size = 0

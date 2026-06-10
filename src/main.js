@@ -31,7 +31,7 @@ import {
 } from './modules/ammo-deduction.js';
 
 // APP_VERSION is used by renderers.js for about section
-export const APP_VERSION = '1.0.4'
+export const APP_VERSION = '1.0.5'
 
 /**
  * Register service worker for offline functionality

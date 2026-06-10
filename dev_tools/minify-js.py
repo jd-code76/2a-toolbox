@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """
 JavaScript Builder for 2A Toolbox Arsenal Management System
-Usage: python3 build_js.py [--no-minify]
+Usage: python3 minify-js.py [--no-minify]
 """
 
 import os
 import sys
 import argparse
-import shutil
 import re
-from datetime import datetime
 
 def remove_comments(content):
     """Remove comments from JavaScript code while preserving special cases"""
@@ -100,9 +98,6 @@ def main():
 
     print("\033[32mAll files found\033[0m")
 
-    # Ensure modules directory exists for backups
-    os.makedirs("../src/modules", exist_ok=True)
-
     total_orig_size = 0
     total_proc_size = 0
     total_orig_lines = 0
@@ -115,13 +110,6 @@ def main():
         dst_file = src_file.replace('../src/', '../www/')
 
         print(f"  \033[36m{file_name}\033[0m")
-
-        # Create backup if destination exists
-        if os.path.exists(dst_file):
-            backup_name = f"{file_name}.backup_{datetime.now().strftime('%Y%m%d_%H%m%S')}"
-            backup_path = os.path.join("../src/modules", backup_name)
-            shutil.copy2(dst_file, backup_path)
-            print(f"    \033[33mBackup: {backup_path}\033[0m")
 
         # Read source file
         with open(src_file, 'r', encoding='utf-8') as f:
@@ -191,7 +179,6 @@ def main():
         print(f"  \033[32mSaved: {saved_pct}% ({saved_kb} KB)\033[0m")
         print(f"  \033[36mLines: {total_orig_lines} -> {total_proc_lines} ({lines_pct}%)\033[0m")
 
-    print(f"\n\033[90mBackups: ../src/modules/\033[0m")
     print("\033[32mUTF-8 preserved\033[0m")
 
     print("\n\033[90mUse: python3 build_js.py [--no-minify]\033[0m")

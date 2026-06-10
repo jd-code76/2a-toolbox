@@ -2,15 +2,13 @@
 """
 HTML Minifier for 2A Toolbox Arsenal Management System
 Removes comments and whitespace but preserves the GPL license comment at the top.
-Usage: python3 minify_html.py [--no-minify]
+Usage: python3 minify-html.py [--no-minify]
 """
 
 import os
 import sys
 import argparse
-import shutil
 import re
-from datetime import datetime
 
 def extract_gpl_license(html):
     """Extract the GPL license comment block at the very beginning, if present."""
@@ -80,14 +78,6 @@ def main():
         dest = os.path.join(output_base, f)
 
         print(f"\n  \033[36mProcessing: {f}\033[0m")
-
-        if os.path.exists(dest):
-            backup_dir = os.path.join(source_dir, "backups")
-            os.makedirs(backup_dir, exist_ok=True)
-            stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-            backup_name = f"{f.replace('/', '_')}.backup.{stamp}"
-            shutil.copy2(dest, os.path.join(backup_dir, backup_name))
-            print(f"    \033[33mBacked up to: {os.path.join(backup_dir, backup_name)}\033[0m")
 
         with open(src, 'r', encoding='utf-8') as fh:
             original = fh.read()
