@@ -10,7 +10,7 @@ import datetime
 
 # Configuration - Changed from 443 to 8443 to avoid permission issues
 PORT = 8443
-WEB_ROOT = Path("./www")
+WEB_ROOT = Path("../www")
 CERT_FILE = "localhost.pem"
 KEY_FILE = "localhost.key"
 
