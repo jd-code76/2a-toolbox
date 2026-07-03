@@ -1,9 +1,10 @@
 'use strict';
 import { db } from './modules/database.js';
-import { updateBadges, toast } from './modules/utils.js';
-import { navigate } from './modules/navigation.js';
 import { initializeEventListeners } from './modules/events.js';
+import { navigate } from './modules/navigation.js';
+import { saveAmmoThresholds, resetAmmoThresholds } from './modules/ammo-settings.js';
 import { state } from './modules/state.js';
+import { toast, updateBadges } from './modules/utils.js';
 window.state = state;
 import { toggleMobileMenu } from './modules/utils.js';
 import { openAddGun, saveGun, showGunDetail } from './modules/guns.js';
@@ -24,7 +25,7 @@ import {
     saveSessionWithoutDeduction,
     saveSessionWithDeduction
 } from './modules/ammo-deduction.js';
-export const APP_VERSION = '1.0.6'
+export const APP_VERSION = '1.0.7'
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
@@ -80,6 +81,8 @@ window.app = {
     openAmmoDeductionModal,
     cancelAmmoDeduction,
     saveSessionWithoutDeduction,
-    saveSessionWithDeduction
+    saveSessionWithDeduction,
+    saveAmmoThresholds,
+    resetAmmoThresholds
 };
 initializeApp();

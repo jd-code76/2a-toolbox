@@ -1,6 +1,11 @@
+/*=====================================================================
+  2A Toolbox – database.js
+  IndexedDB local storage for all data
+=====================================================================*/
+
 'use strict';
 
-import { state } from './state.js';
+import { state, DEFAULT_AMMO_THRESHOLDS } from './state.js';
 
 /**
  * Database module for persistent storage using IndexedDB with localStorage fallback
@@ -51,7 +56,8 @@ export const db = {
                 guns: state.guns,
                 ammo: state.ammo,
                 soldGuns: state.soldGuns,
-                hideSold: state.hideSold
+                hideSold: state.hideSold,
+                ammoThresholds: state.ammoThresholds
             };
 
             const request = store.put(data);
@@ -80,6 +86,7 @@ export const db = {
                         state.ammo = request.result.ammo || [];
                         state.soldGuns = request.result.soldGuns || [];
                         state.hideSold = request.result.hideSold || false;
+                        state.ammoThresholds = request.result.ammoThresholds || { ...DEFAULT_AMMO_THRESHOLDS };
                     } else {
                         // Fallback to localStorage
                         this.loadFromLocalStorage();
@@ -110,6 +117,7 @@ export const db = {
             state.ammo = parsed.ammo || [];
             state.soldGuns = parsed.soldGuns || [];
             state.hideSold = parsed.hideSold || false;
+            state.ammoThresholds = parsed.ammoThresholds || { ...DEFAULT_AMMO_THRESHOLDS };
         }
     }
 };

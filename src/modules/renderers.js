@@ -1,7 +1,13 @@
+/*=====================================================================
+  2A Toolbox – renderers.js
+  App advanced renderers and UI
+=====================================================================*/
+
 'use strict';
 
+import { getAmmoStatus } from './ammo-settings.js';
 import { state } from './state.js';
-import { escapeHtml, getTypeIcon, getUniqueCalibers, parseSessionDate } from './utils.js';
+import { countUniqueRangeSessions, escapeHtml, getTypeIcon, getUniqueCalibers, parseSessionDate } from './utils.js';
 import { APP_VERSION } from '../main.js'; // Import APP_VERSION
 
 /**
@@ -11,8 +17,8 @@ import { APP_VERSION } from '../main.js'; // Import APP_VERSION
 export function renderDashboard() {
     // Calculate statistics
     const totalShots = state.guns.reduce((sum, gun) => sum + gun.shots, 0);
-    const totalCleanings = state.guns.reduce((sum, gun) => sum + gun.cleanings, 0);
-    const totalRangeSessions = state.guns.reduce((sum, gun) => sum + gun.rangeSessions.length, 0);
+    const totalCleanings = state.guns.reduce((sum, gun) => sum + (gun.cleaningSessions || []).length, 0);
+    const totalRangeSessions = countUniqueRangeSessions(state.guns);
     const totalAmmoRounds = state.ammo.reduce((sum, ammo) => sum + ammo.rounds, 0);
     const mostUsedGun = [...state.guns].sort((a, b) => b.shots - a.shots)[0];
 
@@ -41,6 +47,7 @@ export function renderDashboard() {
             allSessions.push({
                 text: session.text,
                 gun: gun.name,
+                gunId: gun.id,
                 date: parseSessionDate(session.text)
             });
         });
@@ -67,22 +74,31 @@ export function renderDashboard() {
     <div class="content">
     <!-- Statistics Cards -->
     <div class="grid-4" style="margin-bottom:22px">
-    <div class="stat-card">
+    <div class="stat-card"
+    data-action="navigate-to-page"
+    data-page="guns">
     <div class="stat-label">Total Firearms</div>
     <div class="stat-value stat-accent">${state.guns.length}</div>
     <div class="stat-sub">${state.soldGuns.length} sold</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card"
+    data-action="navigate-to-page"
+    data-page="cleanings">
     <div class="stat-label">Total Shots Fired</div>
     <div class="stat-value">${totalShots.toLocaleString()}</div>
-    <div class="stat-sub">across all firearms</div>
+    <div class="stat-sub">${totalCleanings} cleanings</div>
+    
     </div>
-    <div class="stat-card">
+    <div class="stat-card"
+    data-action="navigate-to-page"
+    data-page="sessions">
     <div class="stat-label">Range Sessions</div>
     <div class="stat-value">${totalRangeSessions}</div>
-    <div class="stat-sub">${totalCleanings} cleanings</div>
+    <div class="stat-sub">across all firearms</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card"
+    data-action="navigate-to-page"
+    data-page="ammo">
     <div class="stat-label">Ammo on Hand</div>
     <div class="stat-value stat-accent">${totalAmmoRounds.toLocaleString()}</div>
     <div class="stat-sub">${state.ammo.length} entries</div>
@@ -99,7 +115,9 @@ export function renderDashboard() {
     ${caliberEntries.length === 0
         ? '<div style="color:var(--text3);font-size:13px">No ammo data</div>'
         : caliberEntries.map(([caliber, count]) => `
-        <div class="caliber-row">
+        <div class="caliber-row" style="cursor:pointer"
+        data-action="filter-ammo-by-caliber"
+        data-caliber="${escapeHtml(caliber)}">
         <div class="caliber-name">${caliber}</div>
         <div class="caliber-bar-wrap">
         <div class="caliber-bar" style="width:${Math.round(count / maxCaliberCount * 100)}%"></div>
@@ -116,23 +134,27 @@ export function renderDashboard() {
     <i class="fas fa-layer-group"></i> Fleet Overview
     </div>
     ${Object.entries(typeCount).map(([type, count]) => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div class="fleet-type-row"
+        data-action="filter-guns-by-type"
+        data-gun-type="${type}">
         <div style="display:flex;align-items:center;gap:10px">
         <span class="gun-type-badge type-${type.toLowerCase()}">
         ${getTypeIcon(type)}${type}
         </span>
         </div>
-        <span style="font-size:20px;font-weight:700;color:var(--accent)">${count}</span>
+        <span class="fleet-type-count">${count}</span>
         </div>
         `).join('')}
 
         ${mostUsedGun ? `
-            <div style="margin-top:16px;padding:14px;background:var(--surface2);border-radius:var(--radius-sm)">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600;letter-spacing:0.5px">
+            <div class="most-fired-card"
+            data-action="view-most-fired"
+            data-gun-id="${mostUsedGun.id}">
+            <div class="most-fired-label">
             MOST FIRED
             </div>
-            <div style="font-weight:600;font-size:15px">${mostUsedGun.name}</div>
-            <div style="font-size:13px;color:var(--accent);margin-top:2px">
+            <div class="most-fired-name">${mostUsedGun.name}</div>
+            <div class="most-fired-shots">
             ${mostUsedGun.shots.toLocaleString()} shots
             </div>
             </div>
@@ -149,7 +171,8 @@ export function renderDashboard() {
                 ? '<div style="color:var(--text3);font-size:13px">No sessions logged</div>'
                 : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
                 ${recentSessions.map(session => `
-                    <div class="session-item">
+                    <div class="session-item" style="cursor:pointer"
+                    data-gun-id="${session.gunId}">
                     <span class="session-dot"></span>
                     <div>
                     <div style="font-size:12px;color:var(--text)">${session.text}</div>
@@ -185,6 +208,9 @@ export function renderGuns() {
     <div class="search-wrapper">
     <i class="fas fa-search"></i>
     <input class="search-bar" id="gun-search" placeholder="Search firearms..." style="padding-left:38px">
+    <button class="search-clear" data-action="clear-search" data-search-id="gun-search">
+    <i class="fas fa-times"></i>
+    </button>
     </div>
     <button class="btn btn-primary btn-sm" onclick="window.app.openAddGun()">
     <i class="fas fa-plus"></i> Add
@@ -258,7 +284,7 @@ export function renderGunCard(gun) {
     <div class="gun-stat-lbl">Shots</div>
     </div>
     <div class="gun-stat-item">
-    <div class="gun-stat-val">${gun.rangeSessions.length}</div>
+    <div class="gun-stat-val">${countUniqueRangeSessions([gun])}</div>
     <div class="gun-stat-lbl">Sessions</div>
     </div>
     <div class="gun-stat-item">
@@ -295,6 +321,9 @@ export function renderAmmo() {
     <div class="search-wrapper">
     <i class="fas fa-search"></i>
     <input class="search-bar" id="ammo-search" placeholder="Search ammo..." style="padding-left:38px">
+    <button class="search-clear" data-action="clear-search" data-search-id="ammo-search">
+    <i class="fas fa-times"></i>
+    </button>
     </div>
     <button class="btn btn-primary btn-sm" onclick="window.app.openAddAmmo()">
     <i class="fas fa-plus"></i> Add
@@ -328,25 +357,151 @@ export function renderAmmo() {
 }
 
 /**
+ * Render ammo thresholds settings page
+ * @returns {string} HTML string for settings page
+ */
+export function renderAmmoThresholds() {
+    const thresholds = state.ammoThresholds;
+
+    return `
+    <div class="topbar">
+    <button class="mobile-menu-btn" onclick="window.app.toggleMobileMenu()">
+    <i class="fas fa-bars"></i>
+    </button>
+    <div class="topbar-title">
+    <i class="fas fa-cog"></i> Settings
+    </div>
+    </div>
+
+    <div class="content">
+    <div class="card" style="max-width:700px;margin:0 auto;">
+    <div class="card-title">
+    <i class="fas fa-sliders-h"></i> Ammo Inventory Thresholds
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.6">
+    Configure round count thresholds for determining when ammunition is running low.
+    Values below these thresholds will show as <span class="pill pill-orange" style="display:inline-flex"><i class="fas fa-exclamation"></i> Low</span>.
+    </p>
+
+    <!-- Pistol Threshold -->
+    <div style="background:var(--surface2);padding:20px;border-radius:var(--radius-sm);margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <span class="gun-type-badge type-pistol">
+    <i class="fas fa-gun"></i> Pistol
+    </span>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+    <label class="form-label">Low Threshold</label>
+    <input class="form-input" type="number" id="threshold-pistol" 
+    value="${thresholds.pistol}" min="0" step="25">
+    <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
+    Rounds below this count are considered "Low". Default 250.
+    </small>
+    </div>
+    </div>
+
+    <!-- Rifle Threshold -->
+    <div style="background:var(--surface2);padding:20px;border-radius:var(--radius-sm);margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <span class="gun-type-badge type-rifle">
+    <i class="fas fa-crosshairs"></i> Rifle
+    </span>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+    <label class="form-label">Low Threshold</label>
+    <input class="form-input" type="number" id="threshold-rifle" 
+    value="${thresholds.rifle}" min="0" step="25">
+    <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
+    Rounds below this count are considered "Low". Default 500.
+    </small>
+    </div>
+    </div>
+
+    <!-- Shotgun Threshold -->
+    <div style="background:var(--surface2);padding:20px;border-radius:var(--radius-sm);margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <span class="gun-type-badge type-shotgun">
+    <i class="fas fa-bullseye"></i> Shotgun
+    </span>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+    <label class="form-label">Low Threshold</label>
+    <input class="form-input" type="number" id="threshold-shotgun" 
+    value="${thresholds.shotgun}" min="0" step="10">
+    <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
+    Rounds below this count are considered "Low". Default 50.
+    </small>
+    </div>
+    </div>
+
+    <!-- BB Threshold -->
+    <div style="background:var(--surface2);padding:20px;border-radius:var(--radius-sm);margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <span class="gun-type-badge type-other">
+    <i class="fas fa-circle"></i> BB (.177)
+    </span>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+    <label class="form-label">Low Threshold</label>
+    <input class="form-input" type="number" id="threshold-bb" 
+    value="${thresholds.bb}" min="0" step="100">
+    <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
+    BBs below this count are considered "Low". Default 1000.
+    </small>
+    </div>
+    </div>
+
+    <!-- Airsoft Threshold -->
+    <div style="background:var(--surface2);padding:20px;border-radius:var(--radius-sm);margin-bottom:24px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <span class="gun-type-badge type-other">
+    <i class="fas fa-circle"></i> Airsoft (6mm)
+    </span>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+    <label class="form-label">Low Threshold</label>
+    <input class="form-input" type="number" id="threshold-airsoft" 
+    value="${thresholds.airsoft}" min="0" step="250">
+    <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
+    Airsoft BBs below this count are considered "Low". Default 1500.
+    </small>
+    </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+    <button class="btn btn-ghost" onclick="window.app.resetAmmoThresholds()">
+    <i class="fas fa-undo"></i> Reset to Defaults
+    </button>
+    <button class="btn btn-primary" onclick="window.app.saveAmmoThresholds()">
+    <i class="fas fa-save"></i> Save Thresholds
+    </button>
+    </div>
+    </div>
+    </div>
+    `;
+}
+
+/**
  * Render individual ammo card
  * @param {Object} ammo - Ammo object to render
  * @returns {string} HTML string for ammo card
  */
 export function renderAmmoCard(ammo) {
     const rounds = Number(ammo.rounds) || 0;
+    const status = getAmmoStatus(ammo.caliber, rounds);
 
     // Determine status pill
     let statusPill;
-    if (rounds === 0) {
+    if (status === 'empty') {
         statusPill = '<span class="pill pill-red"><i class="fas fa-times"></i> Empty</span>';
-    } else if (rounds < 100) {
+    } else if (status === 'low') {
         statusPill = '<span class="pill pill-orange"><i class="fas fa-exclamation"></i> Low</span>';
     } else {
         statusPill = '<span class="pill pill-green"><i class="fas fa-check"></i> Stocked</span>';
     }
 
     return `
-    <div class="ammo-card" data-ammo-id="${ammo.id}">
+    <div class="ammo-card" data-ammo-id="${ammo.id}" data-status="${status}">
     <div class="ammo-name">${ammo.brand}</div>
     <div class="ammo-cal">${ammo.caliber}</div>
     <div class="ammo-details">

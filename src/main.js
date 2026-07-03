@@ -1,10 +1,16 @@
+/*=====================================================================
+  2A Toolbox – main.js
+  Main app execution
+=====================================================================*/
+
 'use strict';
 
 import { db } from './modules/database.js';
-import { updateBadges, toast } from './modules/utils.js';
-import { navigate } from './modules/navigation.js';
 import { initializeEventListeners } from './modules/events.js';
+import { navigate } from './modules/navigation.js';
+import { saveAmmoThresholds, resetAmmoThresholds } from './modules/ammo-settings.js';
 import { state } from './modules/state.js';
+import { toast, updateBadges } from './modules/utils.js';
 
 // Attach state to window so it's accessible globally
 window.state = state;
@@ -31,7 +37,7 @@ import {
 } from './modules/ammo-deduction.js';
 
 // APP_VERSION is used by renderers.js for about section
-export const APP_VERSION = '1.0.6'
+export const APP_VERSION = '1.0.7'
 
 /**
  * Register service worker for offline functionality
@@ -118,7 +124,11 @@ window.app = {
     openAmmoDeductionModal,
     cancelAmmoDeduction,
     saveSessionWithoutDeduction,
-    saveSessionWithDeduction
+    saveSessionWithDeduction,
+
+    // Settings functions
+    saveAmmoThresholds,
+    resetAmmoThresholds
 };
 
 // Start the application

@@ -1,14 +1,20 @@
+/*=====================================================================
+  2A Toolbox – navigation.js
+  App navigation and basic page content
+=====================================================================*/
+
 'use strict';
 
 import { state } from './state.js';
 import {
+    renderAbout,
+    renderAmmo,
+    renderAmmoThresholds,
+    renderCleanings,
     renderDashboard,
     renderGuns,
-    renderAmmo,
-    renderSessions,
-    renderCleanings,
     renderImport,
-    renderAbout
+    renderSessions
 } from './renderers.js';
 
 /**
@@ -36,6 +42,7 @@ export function navigate(page) {
         sessions: renderSessions,
         cleanings: renderCleanings,
         import: renderImport,
+        settings: renderAmmoThresholds,
         about: renderAbout
     };
 
@@ -44,6 +51,12 @@ export function navigate(page) {
 
     // Attach event listeners for import page (drag & drop)
     attachImportEventListeners();
+
+    // Scroll to top when navigating to new page
+    const mainElement = document.querySelector('.main');
+    if (mainElement) {
+        mainElement.scrollTop = 0;
+    }
 }
 
 /**

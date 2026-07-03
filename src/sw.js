@@ -1,3 +1,8 @@
+/*=====================================================================
+  2A Toolbox – sw.js
+  Service worker for offline and PWA support
+=====================================================================*/
+
 const CORE_ASSETS = [
     '/',
     '/index.html',
@@ -7,6 +12,7 @@ const CORE_ASSETS = [
     '/manifest.json',
     '/modules/ammo.js',
     '/modules/ammo-deduction.js',
+    '/modules/ammo-settings.js',
     '/modules/database.js',
     '/modules/events.js',
     '/modules/guns.js',

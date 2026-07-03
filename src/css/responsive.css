@@ -1,5 +1,6 @@
 /* RESPONSIVE */
 @media (max-width: 768px) {
+    /* Sidebar */
     .sidebar {
         position: fixed;
         left: -260px;
@@ -14,6 +15,7 @@
         box-shadow: 4px 0 12px rgba(0,0,0,0.5);
     }
 
+    /* Mobile Overlay */
     .mobile-overlay {
         display: none;
         position: fixed;
@@ -26,6 +28,7 @@
         display: block;
     }
 
+    /* Mobile Menu Button */
     .mobile-menu-btn {
         display: flex;
         align-items: center;
@@ -47,6 +50,7 @@
         border-color: var(--accent);
     }
 
+    /* Topbar */
     .topbar {
         padding: 12px 16px;
         gap: 12px;
@@ -75,10 +79,7 @@
         flex-wrap: nowrap;
     }
 
-    .search-wrapper {
-        display: none;
-    }
-
+    /* Buttons */
     .btn {
         padding: 10px 14px;
         font-size: 12px;
@@ -103,6 +104,7 @@
         font-size: 11px;
     }
 
+    /* Layout */
     .content {
         padding: 16px;
     }
@@ -138,6 +140,7 @@
         width: 100%;
     }
 
+    /* Gun & Ammo Grids */
     .gun-grid {
         grid-template-columns: 1fr;
         gap: 14px;
@@ -148,6 +151,7 @@
         gap: 14px;
     }
 
+    /* Stat Cards */
     .stat-card {
         padding: 14px 16px;
     }
@@ -164,6 +168,7 @@
         font-size: 11px;
     }
 
+    /* Filters */
     .filter-bar {
         gap: 6px;
         margin-bottom: 14px;
@@ -174,6 +179,7 @@
         font-size: 11px;
     }
 
+    /* Modals */
     .modal {
         max-width: 100%;
         max-height: 95vh;
@@ -208,6 +214,7 @@
         justify-content: center;
     }
 
+    /* Forms */
     .form-row {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -222,6 +229,7 @@
         font-size: 12px;
     }
 
+    /* Gun Cards */
     .gun-card-stats {
         padding: 10px 14px 12px;
         gap: 8px;
@@ -235,10 +243,12 @@
         font-size: 9px;
     }
 
+    /* Ammo Cards */
     .ammo-card {
         padding: 14px 16px;
     }
 
+    /* Toasts */
     .toast-container {
         bottom: 16px;
         right: 16px;
@@ -250,11 +260,13 @@
         width: 100%;
     }
 
+    /* Caliber Rows (Dashboard) */
     .caliber-row {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
-        padding: 12px 0;
+        padding: 10px 4px;
+        margin: 0 -4px;
     }
 
     .caliber-name {
@@ -270,6 +282,22 @@
         font-size: 13px;
     }
 
+    /* Fleet Type Rows (Dashboard) */
+    .fleet-type-row {
+        margin: 0 -4px;
+        padding: 10px 4px;
+    }
+
+    .fleet-type-row:hover,
+    .caliber-row:hover {
+        transform: none;
+    }
+
+    .fleet-type-count {
+        font-size: 18px;
+    }
+
+    /* Drop Zone */
     .drop-zone {
         padding: 30px 20px;
     }
@@ -282,6 +310,7 @@
         font-size: 13px;
     }
 
+    /* Empty State */
     .empty-state {
         padding: 60px 20px;
     }
@@ -290,6 +319,7 @@
         font-size: 42px;
     }
 
+    /* Sessions */
     .session-actions {
         opacity: 1;
     }

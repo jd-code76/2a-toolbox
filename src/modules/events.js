@@ -1,3 +1,8 @@
+/*=====================================================================
+  2A Toolbox – events.js
+  Event handlers
+=====================================================================*/
+
 'use strict';
 
 import { state } from './state.js';
@@ -5,28 +10,28 @@ import { db } from './database.js';
 import { closeModal } from './utils.js';
 import { navigate } from './navigation.js';
 import {
-    showGunDetail,
-    openEditGun,
+    applyGunFilter,
     confirmDeleteGun,
     deleteGun,
     markGunAsSold,
+    openEditGun,
     returnGunToInventory,
-    applyGunFilter
+    showGunDetail
 } from './guns.js';
 import {
-    openLogSession,
-    saveSession,
-    openEditSession,
     confirmDeleteSession,
-    deleteSession
+    deleteSession,
+    openLogSession,
+    openEditSession,
+    saveSession
 } from './sessions.js';
 import {
-    showAmmoDetail,
-    updateAmmoRounds,
-    openEditAmmo,
+    applyAmmoFilter,
     confirmDeleteAmmo,
     deleteAmmo,
-    applyAmmoFilter
+    openEditAmmo,
+    showAmmoDetail,
+    updateAmmoRounds
 } from './ammo.js';
 
 /**
@@ -196,6 +201,78 @@ function handleActionClick(target, action, gunId, ammoId) {
         case 'confirm-delete-ammo':
             deleteAmmo(ammoId);
             break;
+        case 'filter-guns-by-type':
+            {
+                const gunType = target.getAttribute('data-gun-type');
+                if (gunType) {
+                    navigate('guns');
+                    setTimeout(() => {
+                        const filterChip = document.querySelector(`#gun-filter-bar [data-filter="${gunType}"]`);
+                        if (filterChip) {
+                            document.querySelectorAll('#gun-filter-bar .filter-chip:not([data-filter="hide-sold"])').forEach(chip => {
+                                chip.classList.remove('active');
+                            });
+                            filterChip.classList.add('active');
+                            const searchQuery = (document.getElementById('gun-search')?.value || '').toLowerCase();
+                            applyGunFilter(gunType, searchQuery);
+                        }
+                    }, 50);
+                }
+            }
+            break;
+        case 'filter-ammo-by-caliber':
+            {
+                const caliber = target.getAttribute('data-caliber');
+                if (caliber) {
+                    navigate('ammo');
+                    setTimeout(() => {
+                        const filterChip = Array.from(document.querySelectorAll('#ammo-filter-bar .filter-chip'))
+                            .find(chip => chip.getAttribute('data-filter') === caliber);
+                        
+                        if (filterChip) {
+                            document.querySelectorAll('#ammo-filter-bar .filter-chip').forEach(chip => {
+                                chip.classList.remove('active');
+                            });
+                            filterChip.classList.add('active');
+                            const searchQuery = (document.getElementById('ammo-search')?.value || '').toLowerCase();
+                            applyAmmoFilter(caliber, searchQuery);
+                        }
+                    }, 50);
+                }
+            }
+            break;
+        case 'navigate-to-sessions':
+            navigate('sessions');
+            break;
+        case 'view-most-fired':
+            if (gunId) {
+                showGunDetail(gunId);
+            }
+            break;
+        case 'navigate-to-page':
+            {
+                const page = target.getAttribute('data-page');
+                if (page) {
+                    navigate(page);
+                }
+            }
+            break;
+        case 'clear-search':
+            {
+                const searchId = target.closest('[data-search-id]')?.getAttribute('data-search-id');
+                const searchInput = document.getElementById(searchId);
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.focus();
+                    const wrapper = searchInput.closest('.search-wrapper');
+                    if (wrapper) {
+                        wrapper.classList.remove('has-value');
+                    }
+                    // Trigger input event to update results
+                    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+            break;
     }
 }
 
@@ -239,6 +316,15 @@ function handleFilterClick(target) {
  * Handle search input changes
  */
 function handleSearchInput(e) {
+    const wrapper = e.target.closest('.search-wrapper');
+    if (wrapper) {
+        if (e.target.value.length > 0) {
+            wrapper.classList.add('has-value');
+        } else {
+            wrapper.classList.remove('has-value');
+        }
+    }
+
     if (e.target.id === 'gun-search') {
         const query = e.target.value.toLowerCase();
         const activeFilter = document.querySelector('#gun-filter-bar .filter-chip.active:not([data-filter="hide-sold"])');

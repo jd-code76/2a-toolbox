@@ -1,7 +1,7 @@
 'use strict';
 import { state } from './state.js';
 import { db } from './database.js';
-import { toast, openModal, closeModal } from './utils.js';
+import { closeModal, toast, openModal } from './utils.js';
 import { showGunDetail } from './guns.js';
 import { openLogSession } from './sessions.js';
 const CALIBER_COMPATIBILITY = {
@@ -37,18 +37,39 @@ const CALIBER_COMPATIBILITY = {
     '6.5': ['6.5', '6.5 creedmoor', '6.5cm'],
     '6.5 creedmoor': ['6.5', '6.5 creedmoor', '6.5cm'],
 };
+function extractBaseCaliber(caliberStr) {
+    return caliberStr
+        .replace(/\([^)]*\)/g, '')  
+        .trim()
+        .toLowerCase();
+}
 function areCalibersCompatible(gunCaliber, ammoCaliber) {
-    const gun = gunCaliber.toLowerCase().trim();
-    const ammo = ammoCaliber.toLowerCase().trim();
-    if (gun === ammo) return true;
-    for (const [key, compatibles] of Object.entries(CALIBER_COMPATIBILITY)) {
-        if (gun.includes(key.toLowerCase()) || key.toLowerCase().includes(gun)) {
-            return compatibles.some(compat =>
-            ammo.includes(compat.toLowerCase()) || compat.toLowerCase().includes(ammo)
-            );
+    const gun = extractBaseCaliber(gunCaliber);
+    const ammo = extractBaseCaliber(ammoCaliber);
+    const exclusions = [
+        { gun: ['.22', '.22lr', '.22 lr'], ammo: ['.223', '.223 rem', '.223 remington'] },
+        { gun: ['.223', '.223 rem', '.223 remington'], ammo: ['.22', '.22lr', '.22 lr'] }
+    ];
+    for (const exclusion of exclusions) {
+        const gunMatches = exclusion.gun.some(ex => gun === ex || gun.includes(ex));
+        const ammoMatches = exclusion.ammo.some(ex => ammo === ex || ammo.includes(ex));
+        if (gunMatches && ammoMatches) {
+            return false;  
         }
     }
-    return gun.includes(ammo) || ammo.includes(gun);
+    if (gun === ammo) return true;
+    for (const compatibles of Object.values(CALIBER_COMPATIBILITY)) {
+        const gunInGroup = compatibles.some(compat => 
+            gun === compat.toLowerCase() || gun.includes(compat.toLowerCase())
+        );
+        const ammoInGroup = compatibles.some(compat => 
+            ammo === compat.toLowerCase() || ammo.includes(compat.toLowerCase())
+        );
+        if (gunInGroup && ammoInGroup) {
+            return true;
+        }
+    }
+    return false;
 }
 export function openAmmoDeductionModal(gun, shots, sessionText) {
     const matchingAmmo = state.ammo.filter(ammo =>

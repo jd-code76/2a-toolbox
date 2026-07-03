@@ -1,13 +1,14 @@
 'use strict';
 import { state } from './state.js';
 import {
+    renderAbout,
+    renderAmmo,
+    renderAmmoThresholds,
+    renderCleanings,
     renderDashboard,
     renderGuns,
-    renderAmmo,
-    renderSessions,
-    renderCleanings,
     renderImport,
-    renderAbout
+    renderSessions
 } from './renderers.js';
 export function navigate(page) {
     state.currentPage = page;
@@ -26,11 +27,16 @@ export function navigate(page) {
         sessions: renderSessions,
         cleanings: renderCleanings,
         import: renderImport,
+        settings: renderAmmoThresholds,
         about: renderAbout
     };
     const renderer = pageRenderers[page];
     mainContent.innerHTML = renderer ? renderer() : '';
     attachImportEventListeners();
+    const mainElement = document.querySelector('.main');
+    if (mainElement) {
+        mainElement.scrollTop = 0;
+    }
 }
 function attachImportEventListeners() {
     if (state.currentPage !== 'import') return;

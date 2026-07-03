@@ -72,6 +72,7 @@ def main():
         "../src/sw.js",
         "../src/modules/ammo.js",
         "../src/modules/ammo-deduction.js",
+        "../src/modules/ammo-settings.js",
         "../src/modules/database.js",
         "../src/modules/events.js",
         "../src/modules/guns.js",

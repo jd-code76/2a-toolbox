@@ -7,6 +7,7 @@ const CORE_ASSETS = [
     '/manifest.json',
     '/modules/ammo.js',
     '/modules/ammo-deduction.js',
+    '/modules/ammo-settings.js',
     '/modules/database.js',
     '/modules/events.js',
     '/modules/guns.js',

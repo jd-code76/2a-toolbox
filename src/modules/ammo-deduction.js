@@ -1,8 +1,13 @@
+/*=====================================================================
+  2A Toolbox – ammo-deduction.js
+  Logic related to caliber compatibility and automatic ammo reduction
+=====================================================================*/
+
 'use strict';
 
 import { state } from './state.js';
 import { db } from './database.js';
-import { toast, openModal, closeModal } from './utils.js';
+import { closeModal, toast, openModal } from './utils.js';
 import { showGunDetail } from './guns.js';
 import { openLogSession } from './sessions.js';
 
@@ -74,30 +79,63 @@ const CALIBER_COMPATIBILITY = {
 };
 
 /**
+ * Extract base caliber from full caliber string
+ * Removes grain weights, shot sizes, and other details in parentheses
+ * @param {string} caliberStr - Full caliber string
+ * @returns {string} Base caliber
+ */
+function extractBaseCaliber(caliberStr) {
+    // Remove content in parentheses (e.g., "9mm (115)" -> "9mm")
+    return caliberStr
+        .replace(/\([^)]*\)/g, '')  // Remove parentheses and content
+        .trim()
+        .toLowerCase();
+}
+
+/**
  * Check if two calibers are compatible
  * @param {string} gunCaliber - Gun's caliber
  * @param {string} ammoCaliber - Ammo's caliber
  * @returns {boolean} True if calibers are compatible
  */
 function areCalibersCompatible(gunCaliber, ammoCaliber) {
-    const gun = gunCaliber.toLowerCase().trim();
-    const ammo = ammoCaliber.toLowerCase().trim();
+    const gun = extractBaseCaliber(gunCaliber);
+    const ammo = extractBaseCaliber(ammoCaliber);
+
+    // Explicit exclusions - prevent common false matches
+    const exclusions = [
+        { gun: ['.22', '.22lr', '.22 lr'], ammo: ['.223', '.223 rem', '.223 remington'] },
+        { gun: ['.223', '.223 rem', '.223 remington'], ammo: ['.22', '.22lr', '.22 lr'] }
+    ];
+
+    for (const exclusion of exclusions) {
+        const gunMatches = exclusion.gun.some(ex => gun === ex || gun.includes(ex));
+        const ammoMatches = exclusion.ammo.some(ex => ammo === ex || ammo.includes(ex));
+        if (gunMatches && ammoMatches) {
+            return false;  // Explicitly incompatible
+        }
+    }
 
     // Exact match
     if (gun === ammo) return true;
 
-    // Check compatibility map
-    for (const [key, compatibles] of Object.entries(CALIBER_COMPATIBILITY)) {
-        if (gun.includes(key.toLowerCase()) || key.toLowerCase().includes(gun)) {
-            // Check if ammo caliber matches any compatible caliber
-            return compatibles.some(compat =>
-            ammo.includes(compat.toLowerCase()) || compat.toLowerCase().includes(ammo)
-            );
+    // Check each compatibility group
+    for (const compatibles of Object.values(CALIBER_COMPATIBILITY)) {
+        const gunInGroup = compatibles.some(compat => 
+            gun === compat.toLowerCase() || gun.includes(compat.toLowerCase())
+        );
+        
+        const ammoInGroup = compatibles.some(compat => 
+            ammo === compat.toLowerCase() || ammo.includes(compat.toLowerCase())
+        );
+        
+        // Both must be in the SAME group
+        if (gunInGroup && ammoInGroup) {
+            return true;
         }
     }
 
-    // Fallback to substring matching (original behavior)
-    return gun.includes(ammo) || ammo.includes(gun);
+    return false;
 }
 
 /**

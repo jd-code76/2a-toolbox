@@ -1,3 +1,8 @@
+/*=====================================================================
+  2A Toolbox – utils.js
+  Utility functions shared across modules
+=====================================================================*/
+
 'use strict';
 
 /**
@@ -153,4 +158,60 @@ export function toggleMobileMenu() {
 export function updateBadges(gunsCount, ammoCount) {
     document.getElementById('guns-badge').textContent = gunsCount;
     document.getElementById('ammo-badge').textContent = ammoCount;
+}
+
+/**
+ * Count unique range session dates across all guns
+ * @param {Array} guns - Array of gun objects
+ * @returns {number} Count of unique session dates
+ */
+export function countUniqueRangeSessions(guns) {
+    const uniqueDates = new Set();
+    
+    guns.forEach(gun => {
+        (gun.rangeSessions || []).forEach(session => {
+            // Extract date from session text - handles various formats:
+            // "March 13 2021", "Sep 03 2021", "Jul 02 2026", "Jun 16 2026 — notes"
+            const dateMatch = session.text.match(/^([A-Za-z]+\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4})/);
+            if (dateMatch) {
+                const rawDate = dateMatch[1];
+                
+                // Parse the date to normalize it
+                const parts = rawDate
+                    .replace(/(\d+)(st|nd|rd|th)/, '$1')  // Remove ordinals
+                    .replace(/,/g, '')                     // Remove commas
+                    .replace(/\s+/g, ' ')                  // Collapse spaces
+                    .trim()
+                    .split(' ');
+                
+                if (parts.length === 3) {
+                    const [monthStr, day, year] = parts;
+                    
+                    // Normalize month to 3-letter abbreviation
+                    const monthMap = {
+                        'january': 'Jan', 'jan': 'Jan',
+                        'february': 'Feb', 'feb': 'Feb',
+                        'march': 'Mar', 'mar': 'Mar',
+                        'april': 'Apr', 'apr': 'Apr',
+                        'may': 'May',
+                        'june': 'Jun', 'jun': 'Jun',
+                        'july': 'Jul', 'jul': 'Jul',
+                        'august': 'Aug', 'aug': 'Aug',
+                        'september': 'Sep', 'sep': 'Sep',
+                        'october': 'Oct', 'oct': 'Oct',
+                        'november': 'Nov', 'nov': 'Nov',
+                        'december': 'Dec', 'dec': 'Dec'
+                    };
+                    
+                    const normalizedMonth = monthMap[monthStr.toLowerCase()] || monthStr;
+                    const normalizedDay = day.padStart(2, '0');  // Pad day to 2 digits
+                    const normalizedDate = `${normalizedMonth} ${normalizedDay} ${year}`;
+                    
+                    uniqueDates.add(normalizedDate);
+                }
+            }
+        });
+    });
+    
+    return uniqueDates.size;
 }

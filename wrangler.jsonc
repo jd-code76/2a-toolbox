@@ -3,7 +3,7 @@
   "name": "2a-toolbox",
   "compatibility_date": "2026-05-25",
   "observability": {
-    "enabled": true
+    "enabled": false
   },
   "assets": {
     "directory": "www"

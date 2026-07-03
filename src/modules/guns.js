@@ -1,8 +1,13 @@
+/*=====================================================================
+  2A Toolbox – guns.js
+  Firearm storage/inventory
+=====================================================================*/
+
 'use strict';
 
 import { state } from './state.js';
 import { db } from './database.js';
-import { escapeHtml, getTypeIcon, parseSessionDate, toast, openModal, closeModal, updateBadges } from './utils.js';
+import { closeModal, countUniqueRangeSessions, escapeHtml, getTypeIcon, openModal, parseSessionDate, toast, updateBadges } from './utils.js';
 import { navigate } from './navigation.js';
 import { renderGunCard } from './renderers.js';
 
@@ -65,7 +70,7 @@ export function showGunDetail(id) {
         </div>
         <div class="stat-card" style="padding:14px 16px">
         <div class="stat-label">Range Sessions</div>
-        <div class="stat-value">${gun.rangeSessions.length}</div>
+        <div class="stat-value">${countUniqueRangeSessions([gun])}</div>
         </div>
         <div class="stat-card" style="padding:14px 16px">
         <div class="stat-label">Cleanings</div>
@@ -255,6 +260,14 @@ export function showGunDetail(id) {
                                     `;
 
                                     openModal('detail-modal');
+
+                                    // Reset scroll position
+                                    setTimeout(() => {
+                                        const modalBody = document.querySelector('#detail-modal .modal-body');
+                                        if (modalBody) {
+                                            modalBody.scrollTop = 0;
+                                        }
+                                    }, 0);
 }
 
 /**

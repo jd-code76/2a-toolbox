@@ -1,7 +1,7 @@
 'use strict';
-import { state } from './state.js';
+import { DEFAULT_AMMO_THRESHOLDS, state } from './state.js';
 import { db } from './database.js';
-import { toast, updateBadges, openModal, closeModal } from './utils.js';
+import { closeModal, openModal, toast, updateBadges } from './utils.js';
 import { navigate } from './navigation.js';
 export function importData(jsonData) {
     try {
@@ -48,6 +48,17 @@ export function importData(jsonData) {
                 }
             }
         });
+        if (parsed.settings) {
+            if (parsed.settings.ammoThresholds) {
+                state.ammoThresholds = {
+                    pistol: parsed.settings.ammoThresholds.pistol || DEFAULT_AMMO_THRESHOLDS.pistol,
+                    rifle: parsed.settings.ammoThresholds.rifle || DEFAULT_AMMO_THRESHOLDS.rifle,
+                    shotgun: parsed.settings.ammoThresholds.shotgun || DEFAULT_AMMO_THRESHOLDS.shotgun,
+                    bb: parsed.settings.ammoThresholds.bb || DEFAULT_AMMO_THRESHOLDS.bb,
+                    airsoft: parsed.settings.ammoThresholds.airsoft || DEFAULT_AMMO_THRESHOLDS.airsoft
+                };
+            }
+        }
         db.save();
         const totalNew = gunsAdded + ammoAdded + soldAdded;
         const totalUpdated = gunsUpdated + ammoUpdated + soldUpdated;
@@ -129,8 +140,11 @@ export function exportData() {
                 }
             };
         }),
+        settings: {
+            ammoThresholds: state.ammoThresholds
+        },
         status: true,
-        version: '1.0'
+        version: '1.1'
     };
     const now = new Date();
     const year = now.getFullYear();
@@ -165,6 +179,7 @@ export function confirmImport() {
     </p>
     <p style="color:var(--text3);font-size:12px;margin-bottom:18px;line-height:1.5">
     Existing items with matching IDs will be replaced with data from this backup.
+    Settings will also be imported if present in the backup file.
     </p>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
     <button class="btn btn-ghost btn-sm" onclick="window.app.cancelImport()">Cancel</button>
@@ -222,6 +237,7 @@ export function clearAll() {
     state.guns = [];
     state.ammo = [];
     state.soldGuns = [];
+    state.ammoThresholds = { ...DEFAULT_AMMO_THRESHOLDS };
     db.save();
     updateBadges(0, 0);
     closeModal('confirm-modal');

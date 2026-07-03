@@ -1,8 +1,13 @@
+/*=====================================================================
+  2A Toolbox – ammo.js
+  Ammunition storage/inventory
+=====================================================================*/
+
 'use strict';
 
 import { state } from './state.js';
 import { db } from './database.js';
-import { escapeHtml, toast, openModal, closeModal, updateBadges } from './utils.js';
+import { closeModal, escapeHtml, openModal, toast, updateBadges } from './utils.js';
 import { navigate } from './navigation.js';
 import { renderAmmoCard } from './renderers.js';
 
@@ -81,6 +86,14 @@ export function showAmmoDetail(id) {
     `;
 
     openModal('ammo-detail-modal');
+
+    // Reset scroll position
+    setTimeout(() => {
+        const modalBody = document.querySelector('#ammo-detail-modal .modal-body');
+        if (modalBody) {
+            modalBody.scrollTop = 0;
+        }
+    }, 0);
 }
 
 /**
@@ -270,40 +283,33 @@ export function deleteAmmo(id) {
  * @param {string} filter - Filter type (all, caliber name, stocked, low, empty)
  * @param {string} query - Search query string
  */
-export function applyAmmoFilter(filter, query) {
-    let filtered = state.ammo;
-
-    // Apply status filter
-    if (filter === 'stocked') {
-        filtered = state.ammo.filter(ammo => ammo.rounds >= 100);
-    } else if (filter === 'low') {
-        filtered = state.ammo.filter(ammo => ammo.rounds > 0 && ammo.rounds < 100);
-    } else if (filter === 'empty') {
-        filtered = state.ammo.filter(ammo => ammo.rounds === 0);
-    } else if (filter !== 'all') {
-        // Filter by caliber
-        filtered = state.ammo.filter(ammo =>
-        (ammo.caliber || '').toLowerCase().includes(filter.toLowerCase())
-        );
-    }
-
-    // Apply search query
-    if (query) {
-        filtered = filtered.filter(ammo =>
-        ammo.brand.toLowerCase().includes(query) ||
-        (ammo.caliber || '').toLowerCase().includes(query) ||
-        (ammo.type || '').toLowerCase().includes(query)
-        );
-    }
-
-    // Sort alphabetically by brand
-    filtered = filtered.sort((a, b) => a.brand.localeCompare(b.brand));
-
-    // Render results
-    const grid = document.getElementById('ammo-grid');
-    if (grid) {
-        grid.innerHTML = filtered.length
-        ? filtered.map(renderAmmoCard).join('')
-        : '<div class="empty-state"><i class="fas fa-inbox"></i><p>No ammo found</p></div>';
-    }
+export function applyAmmoFilter(filter, searchQuery = '') {
+    const ammoCards = document.querySelectorAll('#ammo-grid .ammo-card');
+    
+    ammoCards.forEach(card => {
+        const brand = card.querySelector('.ammo-name')?.textContent.toLowerCase() || '';
+        const caliber = card.querySelector('.ammo-cal')?.textContent.toLowerCase() || '';
+        const cardStatus = card.getAttribute('data-status');
+        
+        let matchesFilter = false;
+        
+        if (filter === 'all') {
+            matchesFilter = true;
+        } else if (filter === 'stocked' || filter === 'low' || filter === 'empty') {
+            matchesFilter = cardStatus === filter;
+        } else {
+            // It's a specific caliber filter
+            matchesFilter = caliber === filter.toLowerCase();
+        }
+        
+        const matchesSearch = !searchQuery || 
+            brand.includes(searchQuery) || 
+            caliber.includes(searchQuery);
+            
+        if (matchesFilter && matchesSearch) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
 }

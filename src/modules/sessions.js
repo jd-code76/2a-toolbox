@@ -1,8 +1,13 @@
+/*=====================================================================
+  2A Toolbox – sessions.js
+  Range sessions tracking
+=====================================================================*/
+
 'use strict';
 
 import { state } from './state.js';
 import { db } from './database.js';
-import { escapeHtml, toast, openModal, closeModal } from './utils.js';
+import { closeModal, escapeHtml, openModal, toast } from './utils.js';
 import { showGunDetail } from './guns.js';
 
 /**
