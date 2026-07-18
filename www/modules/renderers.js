@@ -176,7 +176,7 @@ export function renderGuns() {
     <div class="topbar-actions">
     <div class="search-wrapper">
     <i class="fas fa-search"></i>
-    <input class="search-bar" id="gun-search" placeholder="Search firearms..." style="padding-left:38px">
+    <input class="search-bar" id="gun-search" placeholder="Search..." style="padding-left:38px">
     <button class="search-clear" data-action="clear-search" data-search-id="gun-search">
     <i class="fas fa-times"></i>
     </button>
@@ -267,13 +267,13 @@ export function renderAmmo() {
     <i class="fas fa-bars"></i>
     </button>
     <div class="topbar-title">
-    <i class="fas fa-circle"></i> Ammunition
+    <i class="fas fa-circle"></i> Ammo
     <span class="badge" style="margin-left:10px">${state.ammo.length}</span>
     </div>
     <div class="topbar-actions">
     <div class="search-wrapper">
     <i class="fas fa-search"></i>
-    <input class="search-bar" id="ammo-search" placeholder="Search ammo..." style="padding-left:38px">
+    <input class="search-bar" id="ammo-search" placeholder="Search..." style="padding-left:38px">
     <button class="search-clear" data-action="clear-search" data-search-id="ammo-search">
     <i class="fas fa-times"></i>
     </button>
@@ -338,7 +338,7 @@ export function renderAmmoThresholds() {
     <input class="form-input" type="number" id="threshold-pistol" 
     value="${thresholds.pistol}" min="0" step="25">
     <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
-    Rounds below this count are considered "Low". Default 250.
+    Pistol caliber rounds below this count are considered "Low".
     </small>
     </div>
     </div>
@@ -354,7 +354,7 @@ export function renderAmmoThresholds() {
     <input class="form-input" type="number" id="threshold-rifle" 
     value="${thresholds.rifle}" min="0" step="25">
     <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
-    Rounds below this count are considered "Low". Default 500.
+    Rifle caliber rounds below this count are considered "Low".
     </small>
     </div>
     </div>
@@ -370,7 +370,7 @@ export function renderAmmoThresholds() {
     <input class="form-input" type="number" id="threshold-shotgun" 
     value="${thresholds.shotgun}" min="0" step="10">
     <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
-    Rounds below this count are considered "Low". Default 50.
+    Shotgun gaugue rounds below this count are considered "Low".
     </small>
     </div>
     </div>
@@ -386,7 +386,7 @@ export function renderAmmoThresholds() {
     <input class="form-input" type="number" id="threshold-bb" 
     value="${thresholds.bb}" min="0" step="100">
     <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
-    BBs below this count are considered "Low". Default 1000.
+    Steel BBs below this count are considered "Low".
     </small>
     </div>
     </div>
@@ -402,7 +402,7 @@ export function renderAmmoThresholds() {
     <input class="form-input" type="number" id="threshold-airsoft" 
     value="${thresholds.airsoft}" min="0" step="250">
     <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
-    Airsoft BBs below this count are considered "Low". Default 1500.
+    Airsoft BBs below this count are considered "Low".
     </small>
     </div>
     </div>

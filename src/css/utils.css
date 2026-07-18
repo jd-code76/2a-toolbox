@@ -59,7 +59,7 @@
 
 .search-bar:focus {
     border-color: var(--accent);
-    width: 280px;
+    width: 220px;
 }
 
 .search-clear {

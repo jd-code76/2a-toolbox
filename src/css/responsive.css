@@ -323,6 +323,11 @@
     .session-actions {
         opacity: 1;
     }
+
+    /* Searching */
+    .search-bar {
+        max-width: 190px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -341,5 +346,9 @@
 
     .stat-value {
         font-size: 20px;
+    }
+
+    .search-bar {
+        max-width: 120px;
     }
 }
