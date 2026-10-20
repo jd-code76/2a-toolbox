@@ -1,15 +1,15 @@
-'use strict';
-import { db } from './modules/database.js';
-import { initializeEventListeners } from './modules/events.js';
-import { navigate } from './modules/navigation.js';
-import { saveAmmoThresholds, resetAmmoThresholds } from './modules/ammo-settings.js';
-import { state } from './modules/state.js';
-import { toast, updateBadges } from './modules/utils.js';
+"use strict";
+import { db } from "./modules/database.js";
+import { initializeEventListeners } from "./modules/events.js";
+import { navigate } from "./modules/navigation.js";
+import { saveAmmoThresholds, resetAmmoThresholds } from "./modules/ammo-settings.js";
+import { state } from "./modules/state.js";
+import { toast, updateBadges } from "./modules/utils.js";
 window.state = state;
-import { toggleMobileMenu } from './modules/utils.js';
-import { openAddGun, saveGun, showGunDetail } from './modules/guns.js';
-import { openAddAmmo, saveAmmo } from './modules/ammo.js';
-import { saveEditedSession } from './modules/sessions.js';
+import { toggleMobileMenu } from "./modules/utils.js";
+import { openAddGun, saveGun, showGunDetail } from "./modules/guns.js";
+import { openAddAmmo, saveAmmo } from "./modules/ammo.js";
+import { saveEditedSession } from "./modules/sessions.js";
 import {
     importData,
     exportData,
@@ -17,50 +17,51 @@ import {
     cancelImport,
     executeImport,
     confirmClearAll,
-    clearAll
-} from './modules/import-export.js';
+    clearAll,
+} from "./modules/import-export.js";
 import {
     openAmmoDeductionModal,
     cancelAmmoDeduction,
     saveSessionWithoutDeduction,
-    saveSessionWithDeduction
-} from './modules/ammo-deduction.js';
-export const APP_VERSION = '1.0.8b'
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-        .then(reg => {
-            console.log('Service Worker registered');
-            if (reg.active) {
-                reg.active.postMessage({ type: 'VERSION', version: APP_VERSION });
-            }
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.controller.postMessage({
-                        type: 'VERSION',
-                        version: APP_VERSION
-                    });
+    saveSessionWithDeduction,
+} from "./modules/ammo-deduction.js";
+export const APP_VERSION = "1.0.9";
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker
+            .register("sw.js")
+            .then((reg) => {
+                console.log("Service Worker registered");
+                if (reg.active) {
+                    reg.active.postMessage({ type: "VERSION", version: APP_VERSION });
                 }
-            });
-        })
-        .catch(err => console.log('Service Worker registration failed:', err));
+                navigator.serviceWorker.addEventListener("controllerchange", () => {
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({
+                            type: "VERSION",
+                            version: APP_VERSION,
+                        });
+                    }
+                });
+            })
+            .catch((err) => console.log("Service Worker registration failed:", err));
     });
 }
-window.addEventListener('online', () => {
-    document.getElementById('offline-indicator').classList.add('hidden');
-    toast('Connection established. Switching to online mode.', 'success');
+window.addEventListener("online", () => {
+    document.getElementById("offline-indicator").classList.add("hidden");
+    toast("Connection established. Switching to online mode.", "success");
 });
-window.addEventListener('offline', () => {
-    document.getElementById('offline-indicator').classList.remove('hidden');
-    toast('Connection lost. Switching to offline mode.', 'info');
+window.addEventListener("offline", () => {
+    document.getElementById("offline-indicator").classList.remove("hidden");
+    toast("Connection lost. Switching to offline mode.", "info");
 });
 if (!navigator.onLine) {
-    document.getElementById('offline-indicator').classList.remove('hidden');
+    document.getElementById("offline-indicator").classList.remove("hidden");
 }
 async function initializeApp() {
     await db.load();
     updateBadges(window.state.guns.length, window.state.ammo.length);
-    navigate('dashboard');
+    navigate("dashboard");
     initializeEventListeners();
 }
 window.app = {
@@ -83,6 +84,6 @@ window.app = {
     saveSessionWithoutDeduction,
     saveSessionWithDeduction,
     saveAmmoThresholds,
-    resetAmmoThresholds
+    resetAmmoThresholds,
 };
 initializeApp();
