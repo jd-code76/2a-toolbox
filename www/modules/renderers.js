@@ -1,8 +1,8 @@
-'use strict';
-import { getAmmoStatus } from './ammo-settings.js';
-import { state } from './state.js';
-import { countUniqueRangeSessions, escapeHtml, getTypeIcon, getUniqueCalibers, parseSessionDate } from './utils.js';
-import { APP_VERSION } from '../main.js'; 
+"use strict";
+import { getAmmoStatus } from "./ammo-settings.js";
+import { state } from "./state.js";
+import { countUniqueRangeSessions, escapeHtml, getTypeIcon, getUniqueCalibers, parseSessionDate } from "./utils.js";
+import { APP_VERSION } from "../main.js"; 
 export function renderDashboard() {
     const totalShots = state.guns.reduce((sum, gun) => sum + gun.shots, 0);
     const totalCleanings = state.guns.reduce((sum, gun) => sum + (gun.cleaningSessions || []).length, 0);
@@ -10,33 +10,31 @@ export function renderDashboard() {
     const totalAmmoRounds = state.ammo.reduce((sum, ammo) => sum + ammo.rounds, 0);
     const mostUsedGun = [...state.guns].sort((a, b) => b.shots - a.shots)[0];
     const caliberMap = {};
-    state.ammo.forEach(ammo => {
-        const caliber = ammo.caliber || 'Unknown';
+    state.ammo.forEach((ammo) => {
+        const caliber = ammo.caliber || "Unknown";
         caliberMap[caliber] = (caliberMap[caliber] || 0) + ammo.rounds;
     });
     const caliberEntries = Object.entries(caliberMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8); 
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8); 
     const maxCaliberCount = caliberEntries[0]?.[1] || 1;
     const typeCount = {};
-    state.guns.forEach(gun => {
-        const type = gun.type || 'other';
+    state.guns.forEach((gun) => {
+        const type = gun.type || "other";
         typeCount[type] = (typeCount[type] || 0) + 1;
     });
     const allSessions = [];
-    state.guns.forEach(gun => {
-        gun.rangeSessions.forEach(session => {
+    state.guns.forEach((gun) => {
+        gun.rangeSessions.forEach((session) => {
             allSessions.push({
                 text: session.text,
                 gun: gun.name,
                 gunId: gun.id,
-                date: parseSessionDate(session.text)
+                date: parseSessionDate(session.text),
             });
         });
     });
-    const recentSessions = allSessions
-    .sort((a, b) => b.date - a.date)
-    .slice(0, 8);
+    const recentSessions = allSessions.sort((a, b) => b.date - a.date).slice(0, 8);
     return `
     <div class="topbar">
     <button class="mobile-menu-btn" onclick="window.app.toggleMobileMenu()">
@@ -90,19 +88,24 @@ export function renderDashboard() {
     <div class="card-title">
     <i class="fas fa-chart-bar"></i> Ammo Inventory by Caliber
     </div>
-    ${caliberEntries.length === 0
-        ? '<div style="color:var(--text3);font-size:13px">No ammo data</div>'
-        : caliberEntries.map(([caliber, count]) => `
+    ${
+        caliberEntries.length === 0
+            ? '<div style="color:var(--text3);font-size:13px">No ammo data</div>'
+            : caliberEntries
+                  .map(
+                      ([caliber, count]) => `
         <div class="caliber-row" style="cursor:pointer"
         data-action="filter-ammo-by-caliber"
         data-caliber="${escapeHtml(caliber)}">
         <div class="caliber-name">${caliber}</div>
         <div class="caliber-bar-wrap">
-        <div class="caliber-bar" style="width:${Math.round(count / maxCaliberCount * 100)}%"></div>
+        <div class="caliber-bar" style="width:${Math.round((count / maxCaliberCount) * 100)}%"></div>
         </div>
         <div class="caliber-count">${count}</div>
         </div>
-        `).join('')
+        `,
+                  )
+                  .join("")
     }
     </div>
     <!-- Fleet Overview -->
@@ -110,7 +113,9 @@ export function renderDashboard() {
     <div class="card-title">
     <i class="fas fa-layer-group"></i> Fleet Overview
     </div>
-    ${Object.entries(typeCount).map(([type, count]) => `
+    ${Object.entries(typeCount)
+        .map(
+            ([type, count]) => `
         <div class="fleet-type-row"
         data-action="filter-guns-by-type"
         data-gun-type="${type}">
@@ -121,8 +126,12 @@ export function renderDashboard() {
         </div>
         <span class="fleet-type-count">${count}</span>
         </div>
-        `).join('')}
-        ${mostUsedGun ? `
+        `,
+        )
+        .join("")}
+        ${
+            mostUsedGun
+                ? `
             <div class="most-fired-card"
             data-action="view-most-fired"
             data-gun-id="${mostUsedGun.id}">
@@ -134,7 +143,9 @@ export function renderDashboard() {
             ${mostUsedGun.shots.toLocaleString()} shots
             </div>
             </div>
-            ` : ''}
+            `
+                : ""
+        }
             </div>
             </div>
             <!-- Recent Sessions -->
@@ -142,10 +153,13 @@ export function renderDashboard() {
             <div class="card-title">
             <i class="fas fa-history"></i> Recent Range Sessions
             </div>
-            ${recentSessions.length === 0
-                ? '<div style="color:var(--text3);font-size:13px">No sessions logged</div>'
-                : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-                ${recentSessions.map(session => `
+            ${
+                recentSessions.length === 0
+                    ? '<div style="color:var(--text3);font-size:13px">No sessions logged</div>'
+                    : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+                ${recentSessions
+                    .map(
+                        (session) => `
                     <div class="session-item" style="cursor:pointer"
                     data-gun-id="${session.gunId}">
                     <span class="session-dot"></span>
@@ -154,7 +168,9 @@ export function renderDashboard() {
                     <div style="font-size:11px;color:var(--text3)">${session.gun}</div>
                     </div>
                     </div>
-                    `).join('')}
+                    `,
+                    )
+                    .join("")}
                     </div>`
             }
             </div>
@@ -163,7 +179,7 @@ export function renderDashboard() {
 }
 export function renderGuns() {
     const allGuns = [...state.guns, ...state.soldGuns].sort((a, b) => a.name.localeCompare(b.name));
-    const displayGuns = state.hideSold ? allGuns.filter(gun => !gun.sold) : allGuns;
+    const displayGuns = state.hideSold ? allGuns.filter((gun) => !gun.sold) : allGuns;
     return `
     <div class="topbar">
     <button class="mobile-menu-btn" onclick="window.app.toggleMobileMenu()">
@@ -206,21 +222,21 @@ export function renderGuns() {
     <div class="filter-chip" data-filter="sold">
     Sold (${state.soldGuns.length})
     </div>
-    <div class="filter-chip filter-toggle${state.hideSold ? ' active' : ''}" data-filter="hide-sold">
+    <div class="filter-chip filter-toggle${state.hideSold ? " active" : ""}" data-filter="hide-sold">
     <i class="fas fa-eye-slash"></i> Hide Sold
     </div>
     </div>
     <!-- Gun Grid -->
     <div class="gun-grid" id="gun-grid">
-    ${displayGuns.map(renderGunCard).join('')}
+    ${displayGuns.map(renderGunCard).join("")}
     </div>
     </div>
     `;
 }
 export function renderGunCard(gun) {
-    const typeClass = gun.sold ? 'type-sold' : `type-${(gun.type || 'other').toLowerCase()}`;
-    const typeLabel = gun.sold ? 'SOLD' : gun.type || 'Other';
-    const typeIcon = gun.sold ? '<i class="fas fa-ban"></i> ' : getTypeIcon(gun.type || '');
+    const typeClass = gun.sold ? "type-sold" : `type-${(gun.type || "other").toLowerCase()}`;
+    const typeLabel = gun.sold ? "SOLD" : gun.type || "Other";
+    const typeIcon = gun.sold ? '<i class="fas fa-ban"></i> ' : getTypeIcon(gun.type || "");
     return `
     <div class="gun-card" data-gun-id="${gun.id}">
     <div class="gun-card-header">
@@ -228,10 +244,10 @@ export function renderGunCard(gun) {
     <div class="gun-card-name">${gun.name}</div>
     <div class="gun-card-meta">
     <i class="fas fa-circle"></i> ${gun.caliber}
-    <i class="fas fa-barcode" style="margin-left:6px"></i> ${gun.serial || 'N/A'}
+    <i class="fas fa-barcode" style="margin-left:6px"></i> ${gun.serial || "N/A"}
     </div>
     <div class="gun-card-meta" style="margin-top:2px">
-    <i class="fas fa-palette"></i> ${gun.color || 'N/A'}
+    <i class="fas fa-palette"></i> ${gun.color || "N/A"}
     </div>
     </div>
     <span class="gun-type-badge ${typeClass}">
@@ -257,9 +273,9 @@ export function renderGunCard(gun) {
 }
 export function renderAmmo() {
     const calibers = getUniqueCalibers(state.ammo);
-    const filterChips = calibers.map(caliber =>
-    `<div class="filter-chip" data-filter="${escapeHtml(caliber)}">${caliber}</div>`
-    ).join('');
+    const filterChips = calibers
+        .map((caliber) => `<div class="filter-chip" data-filter="${escapeHtml(caliber)}">${caliber}</div>`)
+        .join("");
     const sortedAmmo = [...state.ammo].sort((a, b) => a.brand.localeCompare(b.brand));
     return `
     <div class="topbar">
@@ -301,7 +317,7 @@ export function renderAmmo() {
     </div>
     <!-- Ammo Grid -->
     <div class="ammo-grid" id="ammo-grid">
-    ${sortedAmmo.map(renderAmmoCard).join('')}
+    ${sortedAmmo.map(renderAmmoCard).join("")}
     </div>
     </div>
     `;
@@ -338,7 +354,7 @@ export function renderAmmoThresholds() {
     <input class="form-input" type="number" id="threshold-pistol" 
     value="${thresholds.pistol}" min="0" step="25">
     <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
-    Pistol caliber rounds below this count are considered "Low".
+    Pistol calibers below this count are considered "Low".
     </small>
     </div>
     </div>
@@ -354,7 +370,7 @@ export function renderAmmoThresholds() {
     <input class="form-input" type="number" id="threshold-rifle" 
     value="${thresholds.rifle}" min="0" step="25">
     <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
-    Rifle caliber rounds below this count are considered "Low".
+    Rifle calibers below this count are considered "Low".
     </small>
     </div>
     </div>
@@ -370,7 +386,7 @@ export function renderAmmoThresholds() {
     <input class="form-input" type="number" id="threshold-shotgun" 
     value="${thresholds.shotgun}" min="0" step="10">
     <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">
-    Shotgun gaugue rounds below this count are considered "Low".
+    Shotgun gauges below this count are considered "Low".
     </small>
     </div>
     </div>
@@ -422,9 +438,9 @@ export function renderAmmoCard(ammo) {
     const rounds = Number(ammo.rounds) || 0;
     const status = getAmmoStatus(ammo.caliber, rounds);
     let statusPill;
-    if (status === 'empty') {
+    if (status === "empty") {
         statusPill = '<span class="pill pill-red"><i class="fas fa-times"></i> Empty</span>';
-    } else if (status === 'low') {
+    } else if (status === "low") {
         statusPill = '<span class="pill pill-orange"><i class="fas fa-exclamation"></i> Low</span>';
     } else {
         statusPill = '<span class="pill pill-green"><i class="fas fa-check"></i> Stocked</span>';
@@ -436,18 +452,22 @@ export function renderAmmoCard(ammo) {
     <div class="ammo-details">
     <div class="ammo-detail-row">
     <span>Type</span>
-    <span>${ammo.type || 'N/A'}</span>
+    <span>${ammo.type || "N/A"}</span>
     </div>
     <div class="ammo-detail-row">
     <span>Subtype</span>
-    <span>${ammo.subtype || 'N/A'}</span>
+    <span>${ammo.subtype || "N/A"}</span>
     </div>
-    ${ammo.price ? `
+    ${
+        ammo.price
+            ? `
         <div class="ammo-detail-row">
         <span>Price</span>
         <span>${ammo.price}</span>
         </div>
-        ` : ''}
+        `
+            : ""
+    }
         </div>
         <div style="margin-top:12px;display:flex;align-items:flex-end;justify-content:space-between">
         <div>
@@ -461,14 +481,14 @@ export function renderAmmoCard(ammo) {
 }
 export function renderSessions() {
     const allSessions = [];
-    state.guns.forEach(gun => {
-        gun.rangeSessions.forEach(session => {
+    state.guns.forEach((gun) => {
+        gun.rangeSessions.forEach((session) => {
             allSessions.push({
                 text: session.text,
                 gun: gun.name,
                 gunId: gun.id,
                 type: gun.type,
-                date: parseSessionDate(session.text)
+                date: parseSessionDate(session.text),
             });
         });
     });
@@ -484,27 +504,32 @@ export function renderSessions() {
     </div>
     <div class="content">
     <div class="card">
-    ${allSessions.length === 0
-        ? `<div class="empty-state">
+    ${
+        allSessions.length === 0
+            ? `<div class="empty-state">
         <i class="fas fa-inbox"></i>
         <p>No range sessions logged</p>
         </div>`
-        : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
-        ${allSessions.map(session => `
+            : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+        ${allSessions
+            .map(
+                (session) => `
             <div class="session-item" data-gun-id="${session.gunId}" style="cursor:pointer">
             <span class="session-dot"></span>
             <div>
             <div style="font-size:13px;color:var(--text)">${session.text}</div>
             <div style="font-size:11px;color:var(--text3);margin-top:2px">
             ${session.gun} ·
-            <span class="gun-type-badge type-${(session.type || 'other').toLowerCase()}"
+            <span class="gun-type-badge type-${(session.type || "other").toLowerCase()}"
             style="padding:2px 7px;font-size:9px">
-            ${session.type || '?'}
+            ${session.type || "?"}
             </span>
             </div>
             </div>
             </div>
-            `).join('')}
+            `,
+            )
+            .join("")}
             </div>`
     }
     </div>
@@ -513,13 +538,13 @@ export function renderSessions() {
 }
 export function renderCleanings() {
     const allCleanings = [];
-    state.guns.forEach(gun => {
-        gun.cleaningSessions.forEach(session => {
+    state.guns.forEach((gun) => {
+        gun.cleaningSessions.forEach((session) => {
             allCleanings.push({
                 text: session.text,
                 gun: gun.name,
                 gunId: gun.id,
-                date: parseSessionDate(session.text)
+                date: parseSessionDate(session.text),
             });
         });
     });
@@ -535,13 +560,16 @@ export function renderCleanings() {
     </div>
     <div class="content">
     <div class="card">
-    ${allCleanings.length === 0
-        ? `<div class="empty-state">
+    ${
+        allCleanings.length === 0
+            ? `<div class="empty-state">
         <i class="fas fa-inbox"></i>
         <p>No cleanings logged</p>
         </div>`
-        : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
-        ${allCleanings.map(cleaning => `
+            : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+        ${allCleanings
+            .map(
+                (cleaning) => `
             <div class="session-item" data-gun-id="${cleaning.gunId}" style="cursor:pointer">
             <span class="session-dot" style="background:var(--green)"></span>
             <div>
@@ -549,7 +577,9 @@ export function renderCleanings() {
             <div style="font-size:11px;color:var(--text3);margin-top:2px">${cleaning.gun}</div>
             </div>
             </div>
-            `).join('')}
+            `,
+            )
+            .join("")}
             </div>`
     }
     </div>
@@ -755,10 +785,10 @@ export function renderAbout() {
     <!-- License -->
     <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:20px;text-align:center;font-size:12px;color:var(--text3);line-height:1.6;">
     2A Toolbox is free, open source software licensed under
-    <a href="https://www.gnu.org/licenses/gpl-3.0.en.html#license-text"
+    <a href="https://www.gnu.org/licenses/agpl-3.0.en.html"
     target="_blank"
     rel="noopener noreferrer"
-    class="about-link">GPLv3</a>.
+    class="about-link">AGPLv3</a>.
     </div>
     </div>
     </div>
