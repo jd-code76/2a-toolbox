@@ -490,10 +490,12 @@ export function applyGunFilter(filter, query) {
         ? filtered.map(renderGunCard).join('')
         : '<div class="empty-state"><i class="fas fa-inbox"></i><p>No firearms found</p></div>';
     }
+    const filteredView = filter !== 'all' || Boolean(query) || Boolean(state.hideSold);
     const counter = document.getElementById('gun-filter-count');
     if (counter) {
-        counter.textContent = allGuns.length === 0
-        ? ''
-        : `${filtered.length} of ${allGuns.length} shown`;
+        counter.textContent = (!filteredView || allGuns.length === 0)
+            ? ''
+            : `${filtered.length} of ${allGuns.length} shown`;
     }
+    syncClearButton('guns');
 }

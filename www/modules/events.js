@@ -1,7 +1,7 @@
 'use strict';
 import { state } from './state.js';
 import { db } from './database.js';
-import { closeModal, filterSessionItems } from './utils.js';
+import { clearFilterControls, closeModal, filterSessionItems, isAmmoStatusFilter, resetAmmoStatusFilter } from './utils.js';
 import { navigate, onAfterRender } from './navigation.js';
 import {
     applyGunFilter,
@@ -220,6 +220,9 @@ function handleActionClick(target, action, gunId, ammoId) {
         case 'confirm-delete-ammo':
             deleteAmmo(ammoId);
             break;
+        case 'clear-filters':
+            clearFilters(target.getAttribute('data-scope'));
+            break;
         case 'filter-guns-by-type':
             {
                 const gunType = target.getAttribute('data-gun-type');
@@ -242,6 +245,7 @@ function handleActionClick(target, action, gunId, ammoId) {
             {
                 const caliber = target.getAttribute('data-caliber');
                 if (caliber) {
+                    state.ammoCategory = 'all';
                     navigate('ammo');
                     setTimeout(() => {
                         const filterSelect = document.getElementById('ammo-filter-select');
@@ -313,6 +317,21 @@ function handleActionClick(target, action, gunId, ammoId) {
             break;
     }
 }
+export function clearFilters(scope) {
+    const scopes = clearFilterControls(scope);
+    if (scopes.includes('guns')) {
+        applyGunFilter('all', '');
+    }
+    if (scopes.includes('ammo')) {
+        applyAmmoFilter('all', '', 'all');
+    }
+    ['sessions', 'cleanings'].forEach((key) => {
+        if (!scopes.includes(key)) return;
+        const select = document.getElementById(key === 'sessions' ? 'session-filter-select' : 'cleaning-filter-select');
+        if (select) filterSessionItems(select);
+    });
+    db.save();
+}
 function handleAmmoPillClick(target) {
     const pills = target.parentElement;
     const category = target.getAttribute('data-ammo-category') || 'all';
@@ -321,6 +340,9 @@ function handleAmmoPillClick(target) {
         pill.classList.toggle('active', isActive);
         pill.setAttribute('aria-pressed', String(isActive));
     });
+    if (category !== (state.ammoCategory || 'all') && !isAmmoStatusFilter(state.ammoFilter || 'all')) {
+        resetAmmoStatusFilter();
+    }
     const filterSelect = document.getElementById('ammo-filter-select');
     const filter = filterSelect ? (filterSelect.value || 'all') : 'all';
     const searchQuery = (document.getElementById('ammo-search')?.value || '').toLowerCase();

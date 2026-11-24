@@ -2,6 +2,7 @@
 'use strict';
 
 import { state, DEFAULT_AMMO_THRESHOLDS } from './state.js';
+import { updateBadges } from './utils.js';
 
 /**
  * Database module for persistent storage using IndexedDB with localStorage fallback
@@ -88,6 +89,12 @@ export const db = {
         } catch (_) {
             mirrored = false;
         }
+
+        // Badge counts are derived from state, and every mutation funnels
+        // through save(). Logging a range session or cleaning never touched the
+        // gun/ammo paths that call updateBadges, so its badge only refreshed
+        // after an unrelated edit. Refresh here so the totals always match.
+        updateBadges(state.guns.length, state.ammo.length);
 
         if (idbError && !mirrored) throw idbError;
     },

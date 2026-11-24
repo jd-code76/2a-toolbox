@@ -1,5 +1,6 @@
 'use strict';
 import { state, DEFAULT_AMMO_THRESHOLDS } from './state.js';
+import { updateBadges } from './utils.js';
 export const db = {
     dbName: 'GunTrackerDB',
     version: 1,
@@ -58,6 +59,7 @@ export const db = {
         } catch (_) {
             mirrored = false;
         }
+        updateBadges(state.guns.length, state.ammo.length);
         if (idbError && !mirrored) throw idbError;
     },
     applyRecord(record) {

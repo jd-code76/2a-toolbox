@@ -1,7 +1,7 @@
 "use strict";
 import { AMMO_CATEGORIES, getAmmoCategory, getAmmoStatus } from "./ammo-settings.js";
 import { state } from "./state.js";
-import { countUniqueRangeSessions, escapeHtml, getTypeIcon, getUniqueCalibers, parseSessionDate } from "./utils.js";
+import { buildAmmoFilterOptions, countUniqueRangeSessions, escapeHtml, getTypeIcon, getUniqueCalibers, isAmmoStatusFilter, parseSessionDate } from "./utils.js";
 import { renderPermitAlerts, getPermitStatus } from "./permits.js";
 import { APP_VERSION } from "../main.js"; 
 export function renderDashboard() {
@@ -194,11 +194,10 @@ export function renderGuns() {
         ["rifle", "Rifle", typeCounts.rifle],
         ["shotgun", "Shotgun", typeCounts.shotgun],
         ["other", "Other", typeCounts.other],
-        ["sold", "Sold", typeCounts.sold],
+        ["sold", "Sold", typeCounts.sold]
     ]
-        .map(
-            ([value, label, count]) =>
-                `<option value="${value}"${activeType === value ? " selected" : ""}>${label} (${count})</option>`,
+        .map(([value, label, count]) =>
+            `<option value="${value}"${activeType === value ? " selected" : ""}>${label} (${count})</option>`,
         )
         .join("");
     return `
@@ -238,6 +237,9 @@ export function renderGuns() {
     <span>Hide Sold</span>
     </label>
     <span class="filter-count" id="gun-filter-count" aria-live="polite"></span>
+    <button type="button" class="btn btn-ghost btn-sm filter-clear" hidden data-action="clear-filters" data-scope="guns">
+    <i class="fas fa-times" aria-hidden="true"></i> Clear Filters
+    </button>
     </div>
     <!-- Gun Grid -->
     <div class="gun-grid" id="gun-grid">
@@ -286,31 +288,13 @@ export function renderGunCard(gun) {
 }
 export function renderAmmo() {
     const calibers = getUniqueCalibers(state.ammo);
-    const statusFilters = [
-        ["all", "All ammo"],
-        ["stocked", "Stocked only"],
-        ["low", "Low only"],
-        ["empty", "Empty only"],
-        ["in-stock", "In stock (hide empty)"],
-    ];
-    let activeFilter = state.ammoFilter || "all";
-    const isStatusFilter = statusFilters.some(([value]) => value === activeFilter);
-    if (!isStatusFilter && !calibers.includes(activeFilter)) {
-        activeFilter = "all";
-        state.ammoFilter = "all";
+    const activeCategory = state.ammoCategory || "all";
+    let activeFilter = state.ammoFilter || 'all';
+    if (!isAmmoStatusFilter(activeFilter) && !calibers.includes(activeFilter)) {
+        activeFilter = 'all';
+        state.ammoFilter = 'all';
     }
-    const statusOptions = statusFilters
-        .map(
-            ([value, label]) =>
-                `<option value="${value}"${activeFilter === value ? " selected" : ""}>${label}</option>`,
-        )
-        .join("");
-    const caliberOptions = calibers
-        .map((caliber) => {
-            const selected = activeFilter === caliber ? " selected" : "";
-            return `<option value="${escapeHtml(caliber)}"${selected}>${escapeHtml(caliber)}</option>`;
-        })
-        .join("");
+    const filterOptions = buildAmmoFilterOptions(state.ammo, activeCategory, activeFilter);
     const sortedAmmo = [...state.ammo].sort((a, b) => a.brand.localeCompare(b.brand));
     const categoryCounts = { all: state.ammo.length };
     AMMO_CATEGORIES.forEach(([key]) => {
@@ -319,7 +303,6 @@ export function renderAmmo() {
     state.ammo.forEach((item) => {
         categoryCounts[getAmmoCategory(item.caliber)] += 1;
     });
-    const activeCategory = state.ammoCategory || "all";
     const categoryIcons = {
         all: "fa-layer-group",
         pistol: "fa-gun",
@@ -369,11 +352,13 @@ export function renderAmmo() {
     <label class="filter-label" for="ammo-filter-select">
     <i class="fas fa-filter"></i> Filter
     </label>
-    <select class="form-select filter-select" id="ammo-filter-select">
-    <optgroup label="Status">${statusOptions}</optgroup>
-    ${calibers.length > 0 ? `<optgroup label="Caliber">${caliberOptions}</optgroup>` : ""}
+    <select class="form-select filter-select" id="ammo-filter-select" data-category="${escapeHtml(activeCategory)}">
+    ${filterOptions}
     </select>
     <span class="filter-count" id="ammo-filter-count" aria-live="polite"></span>
+    <button type="button" class="btn btn-ghost btn-sm filter-clear" hidden data-action="clear-filters" data-scope="ammo">
+    <i class="fas fa-times" aria-hidden="true"></i> Clear Filters
+    </button>
     </div>
     <!-- Ammo Grid -->
     ${
@@ -401,7 +386,7 @@ export function renderAmmoThresholds() {
     <i class="fas fa-bars"></i>
     </button>
     <div class="topbar-title">
-    <i class="fas fa-cog"></i> Settings
+    <i class="fas fa-cog"></i> Ammo Threshold Settings
     </div>
     </div>
     <div class="content">
@@ -575,11 +560,10 @@ export function renderSessions() {
         ["pistol", "Pistol"],
         ["rifle", "Rifle"],
         ["shotgun", "Shotgun"],
-        ["other", "Other"],
+        ["other", "Other"]
     ]
-        .map(
-            ([value, label]) =>
-                `<option value="${value}"${activeSessionType === value ? " selected" : ""}>${label} (${sessionTypeCounts[value] || 0})</option>`,
+        .map(([value, label]) =>
+            `<option value="${value}"${activeSessionType === value ? " selected" : ""}>${label} (${sessionTypeCounts[value] || 0})</option>`,
         )
         .join("");
     return `
@@ -600,6 +584,9 @@ export function renderSessions() {
     ${sessionTypeOptions}
     </select>
     <span class="filter-count" id="session-filter-count" aria-live="polite"></span>
+    <button type="button" class="btn btn-ghost btn-sm filter-clear" hidden data-action="clear-filters" data-scope="sessions">
+    <i class="fas fa-times" aria-hidden="true"></i> Clear Filters
+    </button>
     </div>
     <div class="card">
     ${
@@ -663,11 +650,10 @@ export function renderCleanings() {
         ["pistol", "Pistol"],
         ["rifle", "Rifle"],
         ["shotgun", "Shotgun"],
-        ["other", "Other"],
+        ["other", "Other"]
     ]
-        .map(
-            ([value, label]) =>
-                `<option value="${value}"${activeCleaningType === value ? " selected" : ""}>${label} (${cleaningTypeCounts[value] || 0})</option>`,
+        .map(([value, label]) =>
+            `<option value="${value}"${activeCleaningType === value ? " selected" : ""}>${label} (${cleaningTypeCounts[value] || 0})</option>`,
         )
         .join("");
     return `
@@ -688,6 +674,9 @@ export function renderCleanings() {
     ${cleaningTypeOptions}
     </select>
     <span class="filter-count" id="cleaning-filter-count" aria-live="polite"></span>
+    <button type="button" class="btn btn-ghost btn-sm filter-clear" hidden data-action="clear-filters" data-scope="cleanings">
+    <i class="fas fa-times" aria-hidden="true"></i> Clear Filters
+    </button>
     </div>
     <div class="card">
     ${
@@ -728,30 +717,27 @@ export function renderData() {
     const totalRounds = ammo.reduce((sum, item) => sum + Number(item.rounds), 0);
     const roundsFired = guns.reduce((sum, gun) => sum + Number(gun.shots || 0), 0);
     const rangeSessions = guns.reduce(
-        (sum, gun) => sum + (Array.isArray(gun.rangeSessions) ? gun.rangeSessions.length : 0),
-        0,
-    );
+        (sum, gun) => sum + (Array.isArray(gun.rangeSessions) ? gun.rangeSessions.length : 0), 0);
     const cleaningRecords = guns.reduce(
-        (sum, gun) => sum + (Array.isArray(gun.cleaningSessions) ? gun.cleaningSessions.length : 0),
-        0,
-    );
-    const permitStatuses = permits.map((permit) => getPermitStatus(permit));
-    const validPermits = permitStatuses.filter((status) => status.level === "valid").length;
-    const expiringPermits = permitStatuses.filter((status) => status.level === "expiring").length;
-    const expiredPermits = permitStatuses.filter((status) => status.level === "expired").length;
+        (sum, gun) => sum + (Array.isArray(gun.cleaningSessions) ? gun.cleaningSessions.length : 0), 0);
+    const permitStatuses = permits.map(permit => getPermitStatus(permit));
+    const validPermits = permitStatuses.filter(status => status.level === 'valid').length;
+    const expiringPermits = permitStatuses.filter(status => status.level === 'expiring').length;
+    const expiredPermits = permitStatuses.filter(status => status.level === 'expired').length;
     const datedPermits = permits
-        .map((permit) => ({ permit, status: getPermitStatus(permit) }))
-        .filter((entry) => entry.status.days !== null);
-    const nextPermit =
-        datedPermits.filter((entry) => entry.status.days >= 0).sort((a, b) => a.status.days - b.status.days)[0] ||
-        datedPermits.sort((a, b) => b.status.days - a.status.days)[0];
+        .map(permit => ({ permit, status: getPermitStatus(permit) }))
+        .filter(entry => entry.status.days !== null);
+    const nextPermit = datedPermits
+        .filter(entry => entry.status.days >= 0)
+        .sort((a, b) => a.status.days - b.status.days)[0]
+        || datedPermits.sort((a, b) => b.status.days - a.status.days)[0];
     return `
     <div class="topbar">
     <button class="mobile-menu-btn" onclick="window.app.toggleMobileMenu()">
     <i class="fas fa-bars"></i>
     </button>
     <div class="topbar-title">
-    <i class="fas fa-file-import"></i> Import / Export
+    <i class="fas fa-file-import"></i> Manage Data
     </div>
     </div>
     <div class="content">
@@ -816,9 +802,7 @@ export function renderData() {
     <span class="info-label">Cleaning Records</span>
     <span class="info-value">${cleaningRecords.toLocaleString()}</span>
     </div>
-    ${
-        permits.length > 0
-            ? `
+    ${permits.length > 0 ? `
     <div class="info-row">
     <span class="info-label">Permit Status</span>
     <span class="info-value">
@@ -828,15 +812,13 @@ export function renderData() {
     <div class="info-row">
     <span class="info-label">Next Permit Expiration</span>
     <span class="info-value">
-    ${escapeHtml(nextPermit ? `${nextPermit.permit.label || "Permit"} — ${nextPermit.status.label}` : "None scheduled")}
+    ${escapeHtml(nextPermit ? `${nextPermit.permit.label || 'Permit'} — ${nextPermit.status.label}` : 'None scheduled')}
     </span>
-    </div>`
-            : `
+    </div>` : `
     <div class="info-row">
     <span class="info-label">Permit Status</span>
     <span class="info-value">None added</span>
-    </div>`
-    }
+    </div>`}
     </div>
     <!-- Danger Zone -->
     <div style="margin-top:26px">
@@ -877,7 +859,7 @@ export function renderAbout() {
     </div>
     <div style="font-size:14px;color:var(--text2);line-height:1.6;">
     Arsenal Management System for tracking firearms, ammunition,
-    range sessions, maintenance records, and permits.
+    range sessions, and maintenance records.
     </div>
     </div>
     <!-- Author Section -->

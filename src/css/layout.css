@@ -1,5 +1,9 @@
 /* LAYOUT */
-.app { display: flex; height: 100vh; overflow: hidden; }
+/* 100vh ignores the collapsible browser chrome on phones, so the shell was
+   taller than the visible screen and the page itself scrolled — dragging the
+   hamburger bar out of view. dvh tracks the real visible height, keeping the
+   top bar in place and scrolling only .main. */
+.app { display: flex; height: 100vh; height: 100dvh; overflow: hidden; }
 
 .sidebar {
     width: 260px;

@@ -33,7 +33,7 @@ import {
     saveSessionWithoutDeduction,
     saveSessionWithDeduction,
 } from "./modules/ammo-deduction.js";
-export const APP_VERSION = "1.1.0";
+export const APP_VERSION = "1.1.1";
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
         navigator.serviceWorker

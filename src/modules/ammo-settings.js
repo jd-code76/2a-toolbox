@@ -3,7 +3,9 @@
 
 import { DEFAULT_AMMO_THRESHOLDS, state } from './state.js';
 import { db } from './database.js';
-import { toast } from './utils.js';
+import { getAmmoCategory, toast } from './utils.js';
+
+export { getAmmoCategory };
 import { navigate } from './navigation.js';
 
 /**
@@ -50,33 +52,6 @@ export const AMMO_CATEGORIES = [
     ['bb', 'BB'],
     ['airsoft', 'Airsoft']
 ];
-
-/**
- * Classify a caliber string into an ammo category.
- * Single source of truth for thresholds, card badges and the type filters.
- * @param {string} caliber - Ammo caliber
- * @returns {string} One of 'pistol', 'rifle', 'shotgun', 'bb', 'airsoft'
- */
-export function getAmmoCategory(caliber = '') {
-    const cal = String(caliber).toLowerCase();
-
-    if (cal.includes('.177') || cal.includes('bb')) return 'bb';
-    if (cal.includes('6mm') || cal.includes('airsoft')) return 'airsoft';
-    if (/gauge|\bga\b|\bga\./.test(cal)) return 'shotgun';
-    if (
-        cal.includes('.22') || cal.includes('.223') || cal.includes('5.56') ||
-        cal.includes('.308') || cal.includes('.30') || cal.includes('7.62') ||
-        cal.includes('.300') || cal.includes('6.5') || cal.includes('.277') ||
-        cal.includes('.243') || cal.includes('.260') ||
-        cal.includes('blackout') || cal.includes('.300') || cal.startsWith('300')
-    ) {
-        // .22LR, .22WMR, .223, 5.56, .308, etc. all count as rifle calibers
-        return 'rifle';
-    }
-
-    // Default to pistol for handgun calibers (9mm, .45, .40, etc.)
-    return 'pistol';
-}
 
 /**
  * Determine ammo status based on caliber and round count

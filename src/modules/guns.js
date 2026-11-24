@@ -602,11 +602,14 @@ export function applyGunFilter(filter, query) {
         : '<div class="empty-state"><i class="fas fa-inbox"></i><p>No firearms found</p></div>';
     }
 
-    // Keep the live count next to the dropdown honest
+    // Report "N of M shown" only while a filter is narrowing the list
+    const filteredView = filter !== 'all' || Boolean(query) || Boolean(state.hideSold);
     const counter = document.getElementById('gun-filter-count');
     if (counter) {
-        counter.textContent = allGuns.length === 0
-        ? ''
-        : `${filtered.length} of ${allGuns.length} shown`;
+        counter.textContent = (!filteredView || allGuns.length === 0)
+            ? ''
+            : `${filtered.length} of ${allGuns.length} shown`;
     }
+
+    syncClearButton('guns');
 }

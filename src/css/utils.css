@@ -113,6 +113,11 @@
     align-items: center;
 }
 
+/* Clear-filters button in a filter bar */
+.filter-clear {
+    margin-left: auto;
+}
+
 /* Type pills (ammo) */
 .filter-pills {
     display: flex;

@@ -1,7 +1,16 @@
 'use strict';
 import { state } from './state.js';
 import { db } from './database.js';
-import { closeModal, escapeHtml, openModal, toast, updateBadges } from './utils.js';
+import { closeModal, escapeHtml, openModal, syncClearButton, toast, updateBadges } from './utils.js';
+import { buildAmmoFilterOptions, getVisibleCalibers, isAmmoStatusFilter } from './utils.js';
+function syncAmmoFilterMenu(category, activeFilter) {
+    const select = document.getElementById('ammo-filter-select');
+    if (!select) return;
+    if (select.getAttribute('data-category') === category) return;
+    select.innerHTML = buildAmmoFilterOptions(state.ammo, category, activeFilter);
+    select.setAttribute('data-category', category);
+    select.value = activeFilter;
+}
 import { navigate } from './navigation.js';
 import { renderAmmoCard } from './renderers.js';
 export function showAmmoDetail(id) {
@@ -207,12 +216,19 @@ export function deleteAmmo(id) {
     navigate('ammo');
 }
 export function applyAmmoFilter(filter, searchQuery = '', category = 'all') {
-    const activeFilter = filter || 'all';
     const activeCategory = category || 'all';
+    let activeFilter = filter || 'all';
+    if (
+        !isAmmoStatusFilter(activeFilter) &&
+        !getVisibleCalibers(state.ammo, activeCategory).includes(activeFilter)
+    ) {
+        activeFilter = 'all';
+    }
     const ammoCards = document.querySelectorAll('#ammo-grid .ammo-card');
     let visibleCount = 0;
     state.ammoFilter = activeFilter;
     state.ammoCategory = activeCategory;
+    syncAmmoFilterMenu(activeCategory, activeFilter);
     ammoCards.forEach(card => {
         const brand = card.querySelector('.ammo-name')?.textContent.toLowerCase() || '';
         const caliber = card.querySelector('.ammo-cal')?.textContent.toLowerCase() || '';
@@ -239,11 +255,14 @@ export function applyAmmoFilter(filter, searchQuery = '', category = 'all') {
             card.style.display = 'none';
         }
     });
+    const filteredView = activeFilter !== 'all' || activeCategory !== 'all' || Boolean(searchQuery);
     const counter = document.getElementById('ammo-filter-count');
     if (counter) {
-        counter.textContent =
-            ammoCards.length === 0 ? '' : `${visibleCount} of ${ammoCards.length} shown`;
+        counter.textContent = (!filteredView || ammoCards.length === 0)
+            ? ''
+            : `${visibleCount} of ${ammoCards.length} shown`;
     }
+    syncClearButton('ammo');
     const noResults = document.getElementById('ammo-no-results');
     if (noResults) {
         noResults.hidden = ammoCards.length === 0 || visibleCount > 0;
