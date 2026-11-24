@@ -22,6 +22,8 @@
     transition: all 0.15s;
     border-left: 3px solid transparent;
     position: relative;
+    min-width: 0;
+    white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -39,4 +41,11 @@
     font-size: 16px;
     width: 20px;
     text-align: center;
+    flex-shrink: 0;
+}
+
+/* Count badge: pinned to the right edge, never squashed by a long label */
+.nav-item > .badge {
+    margin-left: auto;
+    flex-shrink: 0;
 }

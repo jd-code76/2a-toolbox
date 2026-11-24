@@ -1,13 +1,8 @@
-/*=====================================================================
-  2A Toolbox – main.js
-  Main app execution
-=====================================================================*/
-
 "use strict";
 
 import { db } from "./modules/database.js";
 import { initializeEventListeners } from "./modules/events.js";
-import { navigate } from "./modules/navigation.js";
+import { navigate, isValidPage, pageFromUrl, startRouter } from "./modules/navigation.js";
 import { saveAmmoThresholds, resetAmmoThresholds } from "./modules/ammo-settings.js";
 import { state } from "./modules/state.js";
 import { toast, updateBadges } from "./modules/utils.js";
@@ -20,6 +15,14 @@ import { toggleMobileMenu } from "./modules/utils.js";
 import { openAddGun, saveGun, showGunDetail } from "./modules/guns.js";
 import { openAddAmmo, saveAmmo } from "./modules/ammo.js";
 import { saveEditedSession } from "./modules/sessions.js";
+import {
+    confirmDeletePermit,
+    openAddPermit,
+    openEditPermit,
+    openRenewPermit,
+    maybeNotifyExpiring,
+    getPermitCount,
+} from "./modules/permits.js";
 import {
     importData,
     exportData,
@@ -37,7 +40,7 @@ import {
 } from "./modules/ammo-deduction.js";
 
 // APP_VERSION is used by renderers.js for about section
-export const APP_VERSION = "1.0.9b";
+export const APP_VERSION = "1.1.0";
 
 /**
  * Register service worker for offline functionality
@@ -86,12 +89,31 @@ if (!navigator.onLine) {
 
 /**
  * Initialize application on page load
- * Load data from IndexedDB and render dashboard
+ * Load data from IndexedDB and restore the page from the URL
  */
 async function initializeApp() {
-    await db.load();
-    updateBadges(window.state.guns.length, window.state.ammo.length);
-    navigate("dashboard");
+    // Read the URL before any async storage work. The hash is the source of
+    // truth for a refresh, so it must not depend on how quickly (or whether)
+    // IndexedDB answers in a private window.
+    const urlPage = pageFromUrl();
+
+    try {
+        await db.load();
+    } catch (_) {
+        // A blocked, hung or unavailable store must never keep the app from
+        // rendering: fall through with whatever the in-memory defaults hold.
+    }
+    // The permit badge counts every stored permit, not just the ones expiring.
+    updateBadges(window.state.guns.length, window.state.ammo.length, getPermitCount());
+
+    // The URL hash is the source of truth (so refresh and back/forward work);
+    // the stored lastPage covers entry without a hash, and the dashboard is
+    // the last resort.
+    const startPage = urlPage || (isValidPage(state.lastPage) ? state.lastPage : "dashboard");
+    navigate(startPage, { replace: true });
+    startRouter();
+
+    maybeNotifyExpiring();
     initializeEventListeners();
 }
 
@@ -130,6 +152,12 @@ window.app = {
     // Settings functions
     saveAmmoThresholds,
     resetAmmoThresholds,
+
+    // Permit functions
+    openAddPermit,
+    openEditPermit,
+    openRenewPermit,
+    confirmDeletePermit,
 };
 
 // Start the application

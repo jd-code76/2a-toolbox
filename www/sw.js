@@ -13,6 +13,7 @@ const CORE_ASSETS = [
     '/modules/guns.js',
     '/modules/import-export.js',
     '/modules/navigation.js',
+    '/modules/permits.js',
     '/modules/renderers.js',
     '/modules/sessions.js',
     '/modules/state.js',

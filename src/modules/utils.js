@@ -1,7 +1,3 @@
-/*=====================================================================
-  2A Toolbox – utils.js
-  Utility functions shared across modules
-=====================================================================*/
 
 'use strict';
 
@@ -155,9 +151,57 @@ export function toggleMobileMenu() {
  * @param {number} gunsCount - Number of active guns
  * @param {number} ammoCount - Number of ammo entries
  */
-export function updateBadges(gunsCount, ammoCount) {
-    document.getElementById('guns-badge').textContent = gunsCount;
-    document.getElementById('ammo-badge').textContent = ammoCount;
+export function updateBadges(gunsCount, ammoCount, permitAlerts) {
+    const gunsBadge = document.getElementById('guns-badge');
+    if (gunsBadge) gunsBadge.textContent = gunsCount;
+
+    const ammoBadge = document.getElementById('ammo-badge');
+    if (ammoBadge) ammoBadge.textContent = ammoCount;
+
+    // Only update the permit badge when a count is supplied, so unrelated
+    // edits elsewhere in the app do not reset it.
+    if (typeof permitAlerts === 'number') {
+        const permitsBadge = document.getElementById('permits-badge');
+        if (permitsBadge) permitsBadge.textContent = permitAlerts;
+    }
+}
+
+/**
+ * Show or hide cleaning/range-session cards by firearm type.
+ * Both logs share one markup pattern: each card carries data-session-type and
+ * the select names the list it controls plus its count and empty-state targets.
+ * @param {HTMLSelectElement} select - Filter dropdown for one log
+ */
+export function filterSessionItems(select) {
+    const listId = select.getAttribute('data-list');
+    const countId = select.getAttribute('data-count');
+    const noResultsId = select.getAttribute('data-no-results');
+    const list = listId ? document.getElementById(listId) : null;
+    if (!list) return;
+
+    const type = select.value || 'all';
+    const items = list.querySelectorAll('.session-item');
+    let visible = 0;
+
+    items.forEach(item => {
+        const matches = type === 'all' || item.getAttribute('data-session-type') === type;
+        item.hidden = !matches;
+        // `.session-item` sets `display: flex` in the stylesheet, which outranks
+        // the browser's `[hidden] { display: none }` rule. Without the inline
+        // display the attribute is set but the card stays on screen.
+        item.style.display = matches ? '' : 'none';
+        if (matches) visible += 1;
+    });
+
+    const counter = countId ? document.getElementById(countId) : null;
+    if (counter) {
+        counter.textContent = type === 'all' ? '' : `${visible} of ${items.length}`;
+    }
+
+    const noResults = noResultsId ? document.getElementById(noResultsId) : null;
+    if (noResults) {
+        noResults.hidden = visible > 0 || items.length === 0;
+    }
 }
 
 /**
@@ -167,7 +211,7 @@ export function updateBadges(gunsCount, ammoCount) {
  */
 export function countUniqueRangeSessions(guns) {
     const uniqueDates = new Set();
-    
+
     guns.forEach(gun => {
         (gun.rangeSessions || []).forEach(session => {
             // Extract date from session text - handles various formats:
@@ -175,7 +219,7 @@ export function countUniqueRangeSessions(guns) {
             const dateMatch = session.text.match(/^([A-Za-z]+\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4})/);
             if (dateMatch) {
                 const rawDate = dateMatch[1];
-                
+
                 // Parse the date to normalize it
                 const parts = rawDate
                     .replace(/(\d+)(st|nd|rd|th)/, '$1')  // Remove ordinals
@@ -183,10 +227,10 @@ export function countUniqueRangeSessions(guns) {
                     .replace(/\s+/g, ' ')                  // Collapse spaces
                     .trim()
                     .split(' ');
-                
+
                 if (parts.length === 3) {
                     const [monthStr, day, year] = parts;
-                    
+
                     // Normalize month to 3-letter abbreviation
                     const monthMap = {
                         'january': 'Jan', 'jan': 'Jan',
@@ -202,16 +246,16 @@ export function countUniqueRangeSessions(guns) {
                         'november': 'Nov', 'nov': 'Nov',
                         'december': 'Dec', 'dec': 'Dec'
                     };
-                    
+
                     const normalizedMonth = monthMap[monthStr.toLowerCase()] || monthStr;
                     const normalizedDay = day.padStart(2, '0');  // Pad day to 2 digits
                     const normalizedDate = `${normalizedMonth} ${normalizedDay} ${year}`;
-                    
+
                     uniqueDates.add(normalizedDate);
                 }
             }
         });
     });
-    
+
     return uniqueDates.size;
 }

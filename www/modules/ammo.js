@@ -206,27 +206,46 @@ export function deleteAmmo(id) {
     toast('Ammo deleted', 'info');
     navigate('ammo');
 }
-export function applyAmmoFilter(filter, searchQuery = '') {
+export function applyAmmoFilter(filter, searchQuery = '', category = 'all') {
+    const activeFilter = filter || 'all';
+    const activeCategory = category || 'all';
     const ammoCards = document.querySelectorAll('#ammo-grid .ammo-card');
+    let visibleCount = 0;
+    state.ammoFilter = activeFilter;
+    state.ammoCategory = activeCategory;
     ammoCards.forEach(card => {
         const brand = card.querySelector('.ammo-name')?.textContent.toLowerCase() || '';
         const caliber = card.querySelector('.ammo-cal')?.textContent.toLowerCase() || '';
         const cardStatus = card.getAttribute('data-status');
+        const cardCategory = card.getAttribute('data-category');
         let matchesFilter = false;
-        if (filter === 'all') {
+        if (activeFilter === 'all') {
             matchesFilter = true;
-        } else if (filter === 'stocked' || filter === 'low' || filter === 'empty') {
-            matchesFilter = cardStatus === filter;
+        } else if (activeFilter === 'in-stock') {
+            matchesFilter = cardStatus !== 'empty';
+        } else if (activeFilter === 'stocked' || activeFilter === 'low' || activeFilter === 'empty') {
+            matchesFilter = cardStatus === activeFilter;
         } else {
-            matchesFilter = caliber === filter.toLowerCase();
+            matchesFilter = caliber === activeFilter.toLowerCase();
         }
-        const matchesSearch = !searchQuery || 
-            brand.includes(searchQuery) || 
+        const matchesCategory = activeCategory === 'all' || cardCategory === activeCategory;
+        const matchesSearch = !searchQuery ||
+            brand.includes(searchQuery) ||
             caliber.includes(searchQuery);
-        if (matchesFilter && matchesSearch) {
+        if (matchesFilter && matchesCategory && matchesSearch) {
             card.style.display = '';
+            visibleCount++;
         } else {
             card.style.display = 'none';
         }
     });
+    const counter = document.getElementById('ammo-filter-count');
+    if (counter) {
+        counter.textContent =
+            ammoCards.length === 0 ? '' : `${visibleCount} of ${ammoCards.length} shown`;
+    }
+    const noResults = document.getElementById('ammo-no-results');
+    if (noResults) {
+        noResults.hidden = ammoCards.length === 0 || visibleCount > 0;
+    }
 }

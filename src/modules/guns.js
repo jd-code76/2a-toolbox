@@ -1,7 +1,3 @@
-/*=====================================================================
-  2A Toolbox – guns.js
-  Firearm storage/inventory
-=====================================================================*/
 
 'use strict';
 
@@ -604,5 +600,13 @@ export function applyGunFilter(filter, query) {
         grid.innerHTML = filtered.length
         ? filtered.map(renderGunCard).join('')
         : '<div class="empty-state"><i class="fas fa-inbox"></i><p>No firearms found</p></div>';
+    }
+
+    // Keep the live count next to the dropdown honest
+    const counter = document.getElementById('gun-filter-count');
+    if (counter) {
+        counter.textContent = allGuns.length === 0
+        ? ''
+        : `${filtered.length} of ${allGuns.length} shown`;
     }
 }

@@ -1,7 +1,7 @@
 "use strict";
 import { db } from "./modules/database.js";
 import { initializeEventListeners } from "./modules/events.js";
-import { navigate } from "./modules/navigation.js";
+import { navigate, isValidPage, pageFromUrl, startRouter } from "./modules/navigation.js";
 import { saveAmmoThresholds, resetAmmoThresholds } from "./modules/ammo-settings.js";
 import { state } from "./modules/state.js";
 import { toast, updateBadges } from "./modules/utils.js";
@@ -10,6 +10,14 @@ import { toggleMobileMenu } from "./modules/utils.js";
 import { openAddGun, saveGun, showGunDetail } from "./modules/guns.js";
 import { openAddAmmo, saveAmmo } from "./modules/ammo.js";
 import { saveEditedSession } from "./modules/sessions.js";
+import {
+    confirmDeletePermit,
+    openAddPermit,
+    openEditPermit,
+    openRenewPermit,
+    maybeNotifyExpiring,
+    getPermitCount,
+} from "./modules/permits.js";
 import {
     importData,
     exportData,
@@ -25,7 +33,7 @@ import {
     saveSessionWithoutDeduction,
     saveSessionWithDeduction,
 } from "./modules/ammo-deduction.js";
-export const APP_VERSION = "1.0.9b";
+export const APP_VERSION = "1.1.0";
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
         navigator.serviceWorker
@@ -59,9 +67,16 @@ if (!navigator.onLine) {
     document.getElementById("offline-indicator").classList.remove("hidden");
 }
 async function initializeApp() {
-    await db.load();
-    updateBadges(window.state.guns.length, window.state.ammo.length);
-    navigate("dashboard");
+    const urlPage = pageFromUrl();
+    try {
+        await db.load();
+    } catch (_) {
+    }
+    updateBadges(window.state.guns.length, window.state.ammo.length, getPermitCount());
+    const startPage = urlPage || (isValidPage(state.lastPage) ? state.lastPage : "dashboard");
+    navigate(startPage, { replace: true });
+    startRouter();
+    maybeNotifyExpiring();
     initializeEventListeners();
 }
 window.app = {
@@ -85,5 +100,9 @@ window.app = {
     saveSessionWithDeduction,
     saveAmmoThresholds,
     resetAmmoThresholds,
+    openAddPermit,
+    openEditPermit,
+    openRenewPermit,
+    confirmDeletePermit,
 };
 initializeApp();

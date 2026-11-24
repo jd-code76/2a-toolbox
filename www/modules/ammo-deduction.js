@@ -59,10 +59,10 @@ function areCalibersCompatible(gunCaliber, ammoCaliber) {
     }
     if (gun === ammo) return true;
     for (const compatibles of Object.values(CALIBER_COMPATIBILITY)) {
-        const gunInGroup = compatibles.some(compat => 
+        const gunInGroup = compatibles.some(compat =>
             gun === compat.toLowerCase() || gun.includes(compat.toLowerCase())
         );
-        const ammoInGroup = compatibles.some(compat => 
+        const ammoInGroup = compatibles.some(compat =>
             ammo === compat.toLowerCase() || ammo.includes(compat.toLowerCase())
         );
         if (gunInGroup && ammoInGroup) {

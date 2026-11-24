@@ -82,9 +82,39 @@ export function toggleMobileMenu() {
         overlay.classList.toggle('active');
     }
 }
-export function updateBadges(gunsCount, ammoCount) {
-    document.getElementById('guns-badge').textContent = gunsCount;
-    document.getElementById('ammo-badge').textContent = ammoCount;
+export function updateBadges(gunsCount, ammoCount, permitAlerts) {
+    const gunsBadge = document.getElementById('guns-badge');
+    if (gunsBadge) gunsBadge.textContent = gunsCount;
+    const ammoBadge = document.getElementById('ammo-badge');
+    if (ammoBadge) ammoBadge.textContent = ammoCount;
+    if (typeof permitAlerts === 'number') {
+        const permitsBadge = document.getElementById('permits-badge');
+        if (permitsBadge) permitsBadge.textContent = permitAlerts;
+    }
+}
+export function filterSessionItems(select) {
+    const listId = select.getAttribute('data-list');
+    const countId = select.getAttribute('data-count');
+    const noResultsId = select.getAttribute('data-no-results');
+    const list = listId ? document.getElementById(listId) : null;
+    if (!list) return;
+    const type = select.value || 'all';
+    const items = list.querySelectorAll('.session-item');
+    let visible = 0;
+    items.forEach(item => {
+        const matches = type === 'all' || item.getAttribute('data-session-type') === type;
+        item.hidden = !matches;
+        item.style.display = matches ? '' : 'none';
+        if (matches) visible += 1;
+    });
+    const counter = countId ? document.getElementById(countId) : null;
+    if (counter) {
+        counter.textContent = type === 'all' ? '' : `${visible} of ${items.length}`;
+    }
+    const noResults = noResultsId ? document.getElementById(noResultsId) : null;
+    if (noResults) {
+        noResults.hidden = visible > 0 || items.length === 0;
+    }
 }
 export function countUniqueRangeSessions(guns) {
     const uniqueDates = new Set();

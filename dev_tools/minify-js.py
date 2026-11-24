@@ -78,6 +78,7 @@ def main():
         "../src/modules/guns.js",
         "../src/modules/import-export.js",
         "../src/modules/navigation.js",
+        "../src/modules/permits.js",
         "../src/modules/renderers.js",
         "../src/modules/sessions.js",
         "../src/modules/state.js",

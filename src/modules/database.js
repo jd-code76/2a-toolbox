@@ -1,7 +1,3 @@
-/*=====================================================================
-  2A Toolbox – database.js
-  IndexedDB local storage for all data
-=====================================================================*/
 
 'use strict';
 
@@ -25,6 +21,10 @@ export const db = {
 
             request.onerror = () => reject(request.error);
 
+            // Some privacy modes never deliver success or error; without this
+            // the whole boot sequence would wait on a request that never ends.
+            request.onblocked = () => reject(new Error('IndexedDB blocked'));
+
             request.onsuccess = () => {
                 this.db = request.result;
                 resolve();
@@ -41,28 +41,110 @@ export const db = {
     },
 
     /**
-     * Save current state to IndexedDB
+     * Save current state to IndexedDB (and mirror to localStorage)
      * @returns {Promise} Resolves when save is complete
      */
     async save() {
-        if (!this.db) await this.init();
+        const data = {
+            key: '2a-toolbox_data',
+            guns: state.guns,
+            ammo: state.ammo,
+            soldGuns: state.soldGuns,
+            hideSold: state.hideSold,
+            lastPage: state.lastPage,
+            gunFilter: state.gunFilter,
+            ammoCategory: state.ammoCategory,
+            ammoFilter: state.ammoFilter,
+            sessionFilter: state.sessionFilter,
+            cleaningFilter: state.cleaningFilter,
+            ammoThresholds: state.ammoThresholds,
+            permits: state.permits,
+            permitNotifyEnabled: state.permitNotifyEnabled,
+            permitLeadDays: state.permitLeadDays
+        };
 
+        let idbError = null;
+
+        try {
+            if (!this.db) await this.init();
+
+            await new Promise((resolve, reject) => {
+                const transaction = this.db.transaction(['data'], 'readwrite');
+                const store = transaction.objectStore('data');
+                const request = store.put(data);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        } catch (error) {
+            idbError = error;
+        }
+
+        // Mirror to localStorage so the fallback read path is never stale. This
+        // also keeps data alive in private windows and other contexts where
+        // IndexedDB is blocked, discarded, or over quota.
+        let mirrored = true;
+        try {
+            localStorage.setItem('2a-toolbox_data', JSON.stringify(data));
+        } catch (_) {
+            mirrored = false;
+        }
+
+        if (idbError && !mirrored) throw idbError;
+    },
+
+    /**
+     * Load state from IndexedDB, fallback to localStorage if unavailable
+     * @returns {Promise} Resolves when load is complete
+     */
+    /**
+     * Apply a stored record to the in-memory state
+     * @param {Object|null} record - Record read from IndexedDB or localStorage
+     * @returns {boolean} True when the record was usable
+     */
+    applyRecord(record) {
+        if (!record || typeof record !== 'object') return false;
+
+        state.guns = record.guns || [];
+        state.ammo = record.ammo || [];
+        state.soldGuns = record.soldGuns || [];
+        state.hideSold = record.hideSold || false;
+        state.lastPage = typeof record.lastPage === 'string'
+            ? record.lastPage
+            : 'dashboard';
+        state.gunFilter = typeof record.gunFilter === 'string' ? record.gunFilter : 'all';
+        state.ammoCategory = typeof record.ammoCategory === 'string' ? record.ammoCategory : 'all';
+        state.ammoFilter = typeof record.ammoFilter === 'string' ? record.ammoFilter : 'all';
+        state.sessionFilter = typeof record.sessionFilter === 'string' ? record.sessionFilter : 'all';
+        state.cleaningFilter = typeof record.cleaningFilter === 'string' ? record.cleaningFilter : 'all';
+        state.ammoThresholds = record.ammoThresholds || { ...DEFAULT_AMMO_THRESHOLDS };
+        state.permits = record.permits || [];
+        state.permitNotifyEnabled = record.permitNotifyEnabled === true;
+        state.permitLeadDays = Number.isFinite(Number(record.permitLeadDays))
+            ? Number(record.permitLeadDays)
+            : 30;
+        return true;
+    },
+
+    /**
+     * Reject if a storage promise takes longer than the given grace period so a
+     * hung IndexedDB request can never strand the app before its first render.
+     * @param {Promise} promise
+     * @param {number} ms
+     * @returns {Promise}
+     */
+    withTimeout(promise, ms) {
         return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction(['data'], 'readwrite');
-            const store = transaction.objectStore('data');
-
-            const data = {
-                key: '2a-toolbox_data',
-                guns: state.guns,
-                ammo: state.ammo,
-                soldGuns: state.soldGuns,
-                hideSold: state.hideSold,
-                ammoThresholds: state.ammoThresholds
-            };
-
-            const request = store.put(data);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
+            const timer = setTimeout(() => reject(new Error('Storage timed out')), ms);
+            Promise.resolve(promise).then(
+                value => {
+                    clearTimeout(timer);
+                    resolve(value);
+                },
+                error => {
+                    clearTimeout(timer);
+                    reject(error);
+                }
+            );
         });
     },
 
@@ -71,38 +153,61 @@ export const db = {
      * @returns {Promise} Resolves when load is complete
      */
     async load() {
-        try {
-            if (!this.db) await this.init();
+        let settled = false;
 
-            return new Promise((resolve) => {
+        const settle = () => {
+            settled = true;
+        };
+
+        try {
+            if (!this.db) await this.withTimeout(this.init(), 1500);
+
+            await this.withTimeout(new Promise((resolve) => {
                 const transaction = this.db.transaction(['data'], 'readonly');
                 const store = transaction.objectStore('data');
                 const request = store.get('2a-toolbox_data');
 
                 request.onsuccess = () => {
-                    if (request.result) {
-                        // Load from IndexedDB
-                        state.guns = request.result.guns || [];
-                        state.ammo = request.result.ammo || [];
-                        state.soldGuns = request.result.soldGuns || [];
-                        state.hideSold = request.result.hideSold || false;
-                        state.ammoThresholds = request.result.ammoThresholds || { ...DEFAULT_AMMO_THRESHOLDS };
-                    } else {
-                        // Fallback to localStorage
-                        this.loadFromLocalStorage();
+                    if (!settled) {
+                        settle();
+                        // A record that cannot be read leaves the mirror in charge
+                        if (!this.applyRecord(request.result)) {
+                            this.loadFromLocalStorage();
+                        }
                     }
                     resolve();
                 };
 
-                request.onerror = () => {
-                    // Fallback to localStorage on error
-                    this.loadFromLocalStorage();
-                    resolve();
-                };
-            });
+                request.onerror = () => resolve();
+            }), 1500);
         } catch (e) {
-            // Fallback to localStorage if IndexedDB is unavailable
+            // IndexedDB blocked, hung, or unavailable
+        }
+
+        if (!settled) {
+            settle();
             this.loadFromLocalStorage();
+        }
+    },
+
+    /**
+     * Record the current page in the localStorage mirror immediately, without
+     * waiting for a full IndexedDB save. A refresh right after a navigation
+     * then still has a fallback page even if the async save never lands.
+     * @param {string} page - Page identifier
+     */
+    rememberPage(page) {
+        if (typeof localStorage === 'undefined' || typeof page !== 'string') return;
+
+        try {
+            const raw = localStorage.getItem('2a-toolbox_data');
+            const record = raw ? JSON.parse(raw) : null;
+            const next = record && typeof record === 'object' ? record : {};
+            next.key = '2a-toolbox_data';
+            next.lastPage = page;
+            localStorage.setItem('2a-toolbox_data', JSON.stringify(next));
+        } catch (_) {
+            // Private mode or a corrupt mirror: the URL hash still covers reloads
         }
     },
 
@@ -110,14 +215,24 @@ export const db = {
      * Load state from localStorage (fallback method)
      */
     loadFromLocalStorage() {
-        const data = localStorage.getItem('2a-toolbox_data');
-        if (data) {
-            const parsed = JSON.parse(data);
-            state.guns = parsed.guns || [];
-            state.ammo = parsed.ammo || [];
-            state.soldGuns = parsed.soldGuns || [];
-            state.hideSold = parsed.hideSold || false;
-            state.ammoThresholds = parsed.ammoThresholds || { ...DEFAULT_AMMO_THRESHOLDS };
+        let data = null;
+        try {
+            data = localStorage.getItem('2a-toolbox_data');
+        } catch (_) {
+            // localStorage blocked (privacy mode): nothing to restore
+            return;
         }
+        if (!data) return;
+
+        let parsed = null;
+        try {
+            parsed = JSON.parse(data);
+        } catch (_) {
+            // Corrupt entry: keep the in-memory defaults rather than crashing boot
+            return;
+        }
+        if (!parsed || typeof parsed !== 'object') return;
+
+        this.applyRecord(parsed);
     }
 };

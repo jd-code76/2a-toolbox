@@ -1,7 +1,3 @@
-/*=====================================================================
-  2A Toolbox – ammo.js
-  Ammunition storage/inventory
-=====================================================================*/
 
 'use strict';
 
@@ -280,36 +276,62 @@ export function deleteAmmo(id) {
 
 /**
  * Apply filter and search to ammo list
- * @param {string} filter - Filter type (all, caliber name, stocked, low, empty)
- * @param {string} query - Search query string
+ * @param {string} filter - Filter type (all, in-stock, caliber name, stocked, low, empty)
+ * @param {string} searchQuery - Search query string
+ * @param {string} category - Ammo category (all, pistol, rifle, shotgun, bb, airsoft)
  */
-export function applyAmmoFilter(filter, searchQuery = '') {
+export function applyAmmoFilter(filter, searchQuery = '', category = 'all') {
+    const activeFilter = filter || 'all';
+    const activeCategory = category || 'all';
     const ammoCards = document.querySelectorAll('#ammo-grid .ammo-card');
-    
+    let visibleCount = 0;
+
+    state.ammoFilter = activeFilter;
+    state.ammoCategory = activeCategory;
+
     ammoCards.forEach(card => {
         const brand = card.querySelector('.ammo-name')?.textContent.toLowerCase() || '';
         const caliber = card.querySelector('.ammo-cal')?.textContent.toLowerCase() || '';
         const cardStatus = card.getAttribute('data-status');
-        
+        const cardCategory = card.getAttribute('data-category');
+
         let matchesFilter = false;
-        
-        if (filter === 'all') {
+
+        if (activeFilter === 'all') {
             matchesFilter = true;
-        } else if (filter === 'stocked' || filter === 'low' || filter === 'empty') {
-            matchesFilter = cardStatus === filter;
+        } else if (activeFilter === 'in-stock') {
+            // Everything except empty boxes
+            matchesFilter = cardStatus !== 'empty';
+        } else if (activeFilter === 'stocked' || activeFilter === 'low' || activeFilter === 'empty') {
+            matchesFilter = cardStatus === activeFilter;
         } else {
             // It's a specific caliber filter
-            matchesFilter = caliber === filter.toLowerCase();
+            matchesFilter = caliber === activeFilter.toLowerCase();
         }
-        
-        const matchesSearch = !searchQuery || 
-            brand.includes(searchQuery) || 
+
+        const matchesCategory = activeCategory === 'all' || cardCategory === activeCategory;
+
+        const matchesSearch = !searchQuery ||
+            brand.includes(searchQuery) ||
             caliber.includes(searchQuery);
-            
-        if (matchesFilter && matchesSearch) {
+
+        if (matchesFilter && matchesCategory && matchesSearch) {
             card.style.display = '';
+            visibleCount++;
         } else {
             card.style.display = 'none';
         }
     });
+
+    const counter = document.getElementById('ammo-filter-count');
+    if (counter) {
+        counter.textContent =
+            ammoCards.length === 0 ? '' : `${visibleCount} of ${ammoCards.length} shown`;
+    }
+
+    // Explain an empty result instead of showing a blank page
+    const noResults = document.getElementById('ammo-no-results');
+    if (noResults) {
+        noResults.hidden = ammoCards.length === 0 || visibleCount > 0;
+    }
 }

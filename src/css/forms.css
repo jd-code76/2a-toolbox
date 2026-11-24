@@ -40,3 +40,67 @@
     grid-template-columns: 1fr 1fr;
     gap: 14px;
 }
+
+/* PERMIT SETTINGS */
+.permit-settings { margin-bottom: 18px; }
+
+.permit-settings-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.permit-settings-row + .permit-settings-row {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.permit-settings-row > div:not(.permit-settings-actions) {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+/* The buttons stay pinned to the right edge at any window width; only the
+   hint text beside them reflows. */
+.permit-settings-actions {
+    flex: 0 0 auto;
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.permit-settings-hint {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.permit-notify-toggle { flex-shrink: 0; }
+
+.permit-lead-select {
+    width: auto;
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.permit-form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.form-hint {
+    font-size: 11px;
+    color: var(--text3);
+    line-height: 1.6;
+    margin-bottom: 16px;
+}

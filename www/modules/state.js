@@ -11,6 +11,7 @@ export const state = {
     soldGuns: [],
     ammo: [],
     currentPage: 'dashboard',
+    lastPage: 'dashboard',
     hideSold: false,
     editingGunId: null,
     editingAmmoId: null,
@@ -19,5 +20,13 @@ export const state = {
     editingSessionType: null,
     selectedAmmoForDeduction: null,
     ammoFilter: 'all',
-    ammoThresholds: { ...DEFAULT_AMMO_THRESHOLDS }
+    ammoCategory: 'all',
+    gunFilter: 'all',
+    sessionFilter: 'all',
+    cleaningFilter: 'all',
+    ammoThresholds: { ...DEFAULT_AMMO_THRESHOLDS },
+    permits: [],
+    editingPermitId: null,
+    permitNotifyEnabled: false,
+    permitLeadDays: 30
 };

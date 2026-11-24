@@ -1,7 +1,3 @@
-/*=====================================================================
-  2A Toolbox – ammo-deduction.js
-  Logic related to caliber compatibility and automatic ammo reduction
-=====================================================================*/
 
 'use strict';
 
@@ -121,14 +117,14 @@ function areCalibersCompatible(gunCaliber, ammoCaliber) {
 
     // Check each compatibility group
     for (const compatibles of Object.values(CALIBER_COMPATIBILITY)) {
-        const gunInGroup = compatibles.some(compat => 
+        const gunInGroup = compatibles.some(compat =>
             gun === compat.toLowerCase() || gun.includes(compat.toLowerCase())
         );
-        
-        const ammoInGroup = compatibles.some(compat => 
+
+        const ammoInGroup = compatibles.some(compat =>
             ammo === compat.toLowerCase() || ammo.includes(compat.toLowerCase())
         );
-        
+
         // Both must be in the SAME group
         if (gunInGroup && ammoInGroup) {
             return true;

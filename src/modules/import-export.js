@@ -1,7 +1,3 @@
-/*=====================================================================
-  2A Toolbox – import-export.js
-  Database import/export as JSON
-=====================================================================*/
 
 'use strict';
 
@@ -18,13 +14,26 @@ import { navigate } from './navigation.js';
 export function importData(jsonData) {
     try {
         const parsed = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
-        const items = parsed.data || [];
+        let items = parsed.data || [];
         let gunsAdded = 0;
         let ammoAdded = 0;
         let soldAdded = 0;
         let gunsUpdated = 0;
         let ammoUpdated = 0;
         let soldUpdated = 0;
+        let permitsAdded = 0;
+        let permitsUpdated = 0;
+
+        // Older state shapes may predate the permits array entirely
+        if (!Array.isArray(state.guns)) state.guns = [];
+        if (!Array.isArray(state.ammo)) state.ammo = [];
+        if (!Array.isArray(state.soldGuns)) state.soldGuns = [];
+        if (!Array.isArray(state.permits)) state.permits = [];
+
+        // Permits may be stored in their own top-level array (newer backups)
+        if (Array.isArray(parsed.permits)) {
+            items = items.concat(parsed.permits);
+        }
 
         items.forEach(item => {
             const doc = item.doc;
@@ -66,6 +75,19 @@ export function importData(jsonData) {
                     state.ammo.push(ammo);
                     ammoAdded++;
                 }
+
+            } else if (doc.internalIdentifier === 'permit') {
+                const permit = parsePermit(doc);
+                if (!permit) return;
+                const existingIndex = state.permits.findIndex(p => p.id === permit.id);
+
+                if (existingIndex >= 0) {
+                    state.permits[existingIndex] = permit;
+                    permitsUpdated++;
+                } else {
+                    state.permits.push(permit);
+                    permitsAdded++;
+                }
             }
         });
 
@@ -80,12 +102,19 @@ export function importData(jsonData) {
                     airsoft: parsed.settings.ammoThresholds.airsoft || DEFAULT_AMMO_THRESHOLDS.airsoft
                 };
             }
+
+            if (typeof parsed.settings.permitNotifyEnabled === 'boolean') {
+                state.permitNotifyEnabled = parsed.settings.permitNotifyEnabled;
+            }
+            if (Number.isFinite(parsed.settings.permitLeadDays)) {
+                state.permitLeadDays = parsed.settings.permitLeadDays;
+            }
         }
 
         db.save();
 
-        const totalNew = gunsAdded + ammoAdded + soldAdded;
-        const totalUpdated = gunsUpdated + ammoUpdated + soldUpdated;
+        const totalNew = gunsAdded + ammoAdded + soldAdded + permitsAdded;
+        const totalUpdated = gunsUpdated + ammoUpdated + soldUpdated + permitsUpdated;
 
         if (totalNew > 0 && totalUpdated > 0) {
             toast(`Import complete: ${totalNew} new, ${totalUpdated} updated`, 'success');
@@ -97,7 +126,11 @@ export function importData(jsonData) {
             toast('Import complete: No changes detected', 'info');
         }
 
-        updateBadges(state.guns.length, state.ammo.length);
+        updateBadges(
+            state.guns.length,
+            state.ammo.length,
+            Array.isArray(state.permits) ? state.permits.length : 0
+        );
         navigate('dashboard');
 
     } catch (error) {
@@ -141,10 +174,31 @@ function parseGun(doc, sold = false) {
 }
 
 /**
- * Parse ammo object from import data with field name normalization
- * @param {Object} doc - Raw ammo document from import
- * @returns {Object} Normalized ammo object
+ * Parse permit object from import data with field name normalization
+ * Permits without an expiration date are skipped.
+ * @param {Object} doc - Raw permit document from import
+ * @returns {Object|null} Normalized permit object, or null when unusable
  */
+function parsePermit(doc) {
+    const expirationDate = doc.expirationDate || '';
+    if (!expirationDate) return null;
+
+    const leadRaw = doc.leadDays;
+    return {
+        id: doc._id || doc.id || `permit_${Date.now()}`,
+        label: doc.label || 'Permit',
+        type: doc.type || 'other',
+        authority: doc.authority || '',
+        number: doc.number || '',
+        issueDate: doc.issueDate || '',
+        expirationDate,
+        renewalDate: doc.renewalDate || '',
+        leadDays: leadRaw === null || leadRaw === '' || leadRaw === undefined ? null : Number(leadRaw),
+        notes: doc.notes || '',
+        updatedAt: doc.updatedAt || new Date().toISOString()
+    };
+}
+
 function parseAmmo(doc) {
     return {
         id: doc._id || doc.id || String(Date.now()),
@@ -164,6 +218,13 @@ function parseAmmo(doc) {
  * Compatible with original GunTracker format
  */
 export function exportData() {
+    // Defensive guards: a backup must never fail because one collection was
+    // left undefined or null (legacy or partially hydrated state).
+    if (!Array.isArray(state.guns)) state.guns = [];
+    if (!Array.isArray(state.soldGuns)) state.soldGuns = [];
+    if (!Array.isArray(state.ammo)) state.ammo = [];
+    if (!Array.isArray(state.permits)) state.permits = [];
+
     // Combine all data items
     const allItems = [...state.guns, ...state.soldGuns, ...state.ammo];
 
@@ -191,8 +252,20 @@ export function exportData() {
                 }
             };
         }),
+        // Every permit is backed up, whether or not it is expiring, notified
+        // about, or currently rendered in the permits view.
+        permits: (Array.isArray(state.permits) ? state.permits : []).map(permit => ({
+            id: permit.id,
+            doc: {
+                ...permit,
+                _id: permit.id,
+                internalIdentifier: 'permit'
+            }
+        })),
         settings: {
-            ammoThresholds: state.ammoThresholds
+            ammoThresholds: state.ammoThresholds,
+            permitNotifyEnabled: state.permitNotifyEnabled === true,
+            permitLeadDays: state.permitLeadDays
         },
         status: true,
         version: '1.1'
@@ -318,9 +391,12 @@ export function clearAll() {
     state.ammo = [];
     state.soldGuns = [];
     state.ammoThresholds = { ...DEFAULT_AMMO_THRESHOLDS };
+    state.permits = [];
+    state.permitNotifyEnabled = false;
+    state.permitLeadDays = 30;
     db.save();
-    updateBadges(0, 0);
+    updateBadges(0, 0, 0);
     closeModal('confirm-modal');
     toast('All data cleared', 'info');
-    navigate('import');
+    navigate('data');
 }

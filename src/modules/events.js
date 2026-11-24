@@ -1,14 +1,10 @@
-/*=====================================================================
-  2A Toolbox – events.js
-  Event handlers
-=====================================================================*/
 
 'use strict';
 
 import { state } from './state.js';
 import { db } from './database.js';
-import { closeModal } from './utils.js';
-import { navigate } from './navigation.js';
+import { closeModal, filterSessionItems } from './utils.js';
+import { navigate, onAfterRender } from './navigation.js';
 import {
     applyGunFilter,
     confirmDeleteGun,
@@ -33,6 +29,55 @@ import {
     showAmmoDetail,
     updateAmmoRounds
 } from './ammo.js';
+import {
+    confirmDeletePermit,
+    deletePermit,
+    enableBrowserNotifications,
+    openAddPermit,
+    openEditPermit,
+    openRenewPermit,
+    savePermit,
+    setPermitLeadDays,
+    togglePermitNotify
+} from './permits.js';
+
+/**
+ * Re-apply the saved gun/ammo/log filters to a page that was just rendered.
+ * The dropdowns already show the stored value; this makes the list agree with
+ * them on load instead of showing every record.
+ * @param {string} page - page identifier that was just rendered
+ */
+export function applyStoredFilters(page) {
+    if (page === 'guns') {
+        const select = document.getElementById('gun-filter-select');
+        const filter = (select && select.value) || state.gunFilter || 'all';
+        const query = (document.getElementById('gun-search')?.value || '').toLowerCase();
+        applyGunFilter(filter, query);
+        return;
+    }
+
+    if (page === 'ammo') {
+        const select = document.getElementById('ammo-filter-select');
+        const filter = (select && select.value) || state.ammoFilter || 'all';
+        const query = (document.getElementById('ammo-search')?.value || '').toLowerCase();
+        applyAmmoFilter(filter, query, state.ammoCategory || 'all');
+        return;
+    }
+
+    const logSelect = page === 'sessions'
+        ? document.getElementById('session-filter-select')
+        : page === 'cleanings'
+            ? document.getElementById('cleaning-filter-select')
+            : null;
+
+    if (logSelect) filterSessionItems(logSelect);
+}
+
+// Register at module evaluation, not from initializeEventListeners(): main.js
+// calls navigate() for the first page *before* initializing listeners, so a
+// hook registered there would miss the refresh render entirely and the cards
+// would show every record while the dropdowns still displayed the saved value.
+onAfterRender(applyStoredFilters);
 
 /**
  * Initialize all event listeners
@@ -43,6 +88,52 @@ export function initializeEventListeners() {
 
     // Search input handler
     document.addEventListener('input', handleSearchInput);
+
+    // Select-based controls (select elements do not emit the global click action)
+    document.addEventListener('change', e => {
+        const leadDaysSelect = e.target.closest('[data-action="set-permit-lead-days"]');
+        if (leadDaysSelect) {
+            setPermitLeadDays(leadDaysSelect.value);
+            return;
+        }
+
+        const ammoFilterSelect = e.target.closest('#ammo-filter-select');
+        if (ammoFilterSelect) {
+            state.ammoFilter = ammoFilterSelect.value || 'all';
+            db.save();
+            const searchQuery = (document.getElementById('ammo-search')?.value || '').toLowerCase();
+            applyAmmoFilter(ammoFilterSelect.value, searchQuery, state.ammoCategory || 'all');
+            return;
+        }
+
+        const gunFilterSelect = e.target.closest('#gun-filter-select');
+        if (gunFilterSelect) {
+            state.gunFilter = gunFilterSelect.value || 'all';
+            db.save();
+            applyGunFilter(gunFilterSelect.value, (document.getElementById('gun-search')?.value || '').toLowerCase());
+            return;
+        }
+
+        const hideSoldToggle = e.target.closest('#hide-sold-toggle');
+        if (hideSoldToggle) {
+            state.hideSold = hideSoldToggle.checked;
+            db.save();
+            const gunSelect = document.getElementById('gun-filter-select');
+            applyGunFilter(gunSelect ? gunSelect.value : 'all', (document.getElementById('gun-search')?.value || '').toLowerCase());
+            return;
+        }
+
+        const sessionFilterSelect = e.target.closest('.filter-select[data-list]');
+        if (sessionFilterSelect) {
+            if (sessionFilterSelect.id === 'session-filter-select') {
+                state.sessionFilter = sessionFilterSelect.value;
+            } else if (sessionFilterSelect.id === 'cleaning-filter-select') {
+                state.cleaningFilter = sessionFilterSelect.value;
+            }
+            db.save();
+            filterSessionItems(sessionFilterSelect);
+        }
+    });
 
     // Click outside modal to close
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -107,7 +198,7 @@ function initializeImportHandlers() {
  */
 function handleGlobalClick(e) {
     const target = e.target.closest(
-        '[data-action], [data-modal], [data-page], [data-gun-id], [data-ammo-id], .filter-chip, .gun-card, .ammo-card, .session-item'
+        '[data-action], [data-modal], [data-page], [data-gun-id], [data-ammo-id], [data-permit-id], .filter-pill, .gun-card, .ammo-card, .session-item'
     );
 
     if (!target) return;
@@ -142,9 +233,9 @@ function handleGlobalClick(e) {
     else if (action) {
         handleActionClick(target, action, gunId, ammoId);
     }
-    // Handle filter chips
-    else if (target.classList.contains('filter-chip')) {
-        handleFilterClick(target);
+    // Handle ammo type pills
+    else if (target.classList.contains('filter-pill')) {
+        handleAmmoPillClick(target);
     }
 }
 
@@ -207,15 +298,16 @@ function handleActionClick(target, action, gunId, ammoId) {
                 if (gunType) {
                     navigate('guns');
                     setTimeout(() => {
-                        const filterChip = document.querySelector(`#gun-filter-bar [data-filter="${gunType}"]`);
-                        if (filterChip) {
-                            document.querySelectorAll('#gun-filter-bar .filter-chip:not([data-filter="hide-sold"])').forEach(chip => {
-                                chip.classList.remove('active');
-                            });
-                            filterChip.classList.add('active');
-                            const searchQuery = (document.getElementById('gun-search')?.value || '').toLowerCase();
-                            applyGunFilter(gunType, searchQuery);
-                        }
+                        const filterSelect = document.getElementById('gun-filter-select');
+                        if (!filterSelect) return;
+
+                        const hasType = Array.from(filterSelect.options).some(option => option.value === gunType);
+                        const nextFilter = hasType ? gunType : 'all';
+
+                        filterSelect.value = nextFilter;
+                        state.gunFilter = nextFilter;
+                        const searchQuery = (document.getElementById('gun-search')?.value || '').toLowerCase();
+                        applyGunFilter(nextFilter, searchQuery);
                     }, 50);
                 }
             }
@@ -226,17 +318,18 @@ function handleActionClick(target, action, gunId, ammoId) {
                 if (caliber) {
                     navigate('ammo');
                     setTimeout(() => {
-                        const filterChip = Array.from(document.querySelectorAll('#ammo-filter-bar .filter-chip'))
-                            .find(chip => chip.getAttribute('data-filter') === caliber);
-                        
-                        if (filterChip) {
-                            document.querySelectorAll('#ammo-filter-bar .filter-chip').forEach(chip => {
-                                chip.classList.remove('active');
-                            });
-                            filterChip.classList.add('active');
-                            const searchQuery = (document.getElementById('ammo-search')?.value || '').toLowerCase();
-                            applyAmmoFilter(caliber, searchQuery);
-                        }
+                        const filterSelect = document.getElementById('ammo-filter-select');
+                        if (!filterSelect) return;
+
+                        // Only filter by a caliber that still has boxes; otherwise
+                        // fall back to showing everything.
+                        const hasCaliber = Array.from(filterSelect.options)
+                            .some(option => option.value === caliber);
+                        const nextFilter = hasCaliber ? caliber : 'all';
+
+                        filterSelect.value = nextFilter;
+                        const searchQuery = (document.getElementById('ammo-search')?.value || '').toLowerCase();
+                        applyAmmoFilter(nextFilter, searchQuery);
                     }, 50);
                 }
             }
@@ -256,6 +349,30 @@ function handleActionClick(target, action, gunId, ammoId) {
                     navigate(page);
                 }
             }
+            break;
+        case 'add-permit':
+            openAddPermit();
+            break;
+        case 'edit-permit':
+            openEditPermit(target.getAttribute('data-permit-id'));
+            break;
+        case 'renew-permit':
+            openRenewPermit(target.getAttribute('data-permit-id'));
+            break;
+        case 'save-permit':
+            savePermit();
+            break;
+        case 'confirm-delete-permit':
+            confirmDeletePermit(target.getAttribute('data-permit-id'));
+            break;
+        case 'delete-permit':
+            deletePermit(target.getAttribute('data-permit-id'));
+            break;
+        case 'toggle-permit-notify':
+            togglePermitNotify();
+            break;
+        case 'enable-browser-notifications':
+            enableBrowserNotifications();
             break;
         case 'clear-search':
             {
@@ -277,39 +394,23 @@ function handleActionClick(target, action, gunId, ammoId) {
 }
 
 /**
- * Handle filter chip clicks
+ * Handle ammo type pill clicks
  */
-function handleFilterClick(target) {
-    const parent = target.parentElement;
-    const filter = target.getAttribute('data-filter');
+function handleAmmoPillClick(target) {
+    const pills = target.parentElement;
+    const category = target.getAttribute('data-ammo-category') || 'all';
 
-    if (parent.id === 'gun-filter-bar' && filter === 'hide-sold') {
-        // Toggle hide sold filter
-        target.classList.toggle('active');
-        state.hideSold = target.classList.contains('active');
-        db.save();
+    pills.querySelectorAll('.filter-pill').forEach(pill => {
+        const isActive = pill === target;
+        pill.classList.toggle('active', isActive);
+        pill.setAttribute('aria-pressed', String(isActive));
+    });
 
-        // Reapply current filter
-        const activeTypeChip = parent.querySelector('.filter-chip.active:not([data-filter="hide-sold"])');
-        const typeFilter = activeTypeChip ? activeTypeChip.getAttribute('data-filter') : 'all';
-        applyGunFilter(typeFilter, (document.getElementById('gun-search')?.value || '').toLowerCase());
-
-    } else if (parent.id === 'gun-filter-bar') {
-        // Gun type filter
-        parent.querySelectorAll('.filter-chip:not([data-filter="hide-sold"])').forEach(chip => {
-            chip.classList.remove('active');
-        });
-        target.classList.add('active');
-        applyGunFilter(filter, (document.getElementById('gun-search')?.value || '').toLowerCase());
-
-    } else if (parent.id === 'ammo-filter-bar') {
-        // Ammo filter
-        parent.querySelectorAll('.filter-chip').forEach(chip => {
-            chip.classList.remove('active');
-        });
-        target.classList.add('active');
-        applyAmmoFilter(filter, (document.getElementById('ammo-search')?.value || '').toLowerCase());
-    }
+    const filterSelect = document.getElementById('ammo-filter-select');
+    const filter = filterSelect ? (filterSelect.value || 'all') : 'all';
+    const searchQuery = (document.getElementById('ammo-search')?.value || '').toLowerCase();
+    applyAmmoFilter(filter, searchQuery, category);
+    db.save();
 }
 
 /**
@@ -327,15 +428,15 @@ function handleSearchInput(e) {
 
     if (e.target.id === 'gun-search') {
         const query = e.target.value.toLowerCase();
-        const activeFilter = document.querySelector('#gun-filter-bar .filter-chip.active:not([data-filter="hide-sold"])');
-        const filter = activeFilter ? (activeFilter.getAttribute('data-filter') || 'all') : 'all';
+        const filterSelect = document.getElementById('gun-filter-select');
+        const filter = filterSelect ? (filterSelect.value || 'all') : 'all';
         applyGunFilter(filter, query);
 
     } else if (e.target.id === 'ammo-search') {
         const query = e.target.value.toLowerCase();
-        const activeFilter = document.querySelector('#ammo-filter-bar .filter-chip.active');
-        const filter = activeFilter ? (activeFilter.getAttribute('data-filter') || 'all') : 'all';
-        applyAmmoFilter(filter, query);
+        const filterSelect = document.getElementById('ammo-filter-select');
+        const filter = filterSelect ? (filterSelect.value || 'all') : 'all';
+        applyAmmoFilter(filter, query, state.ammoCategory || 'all');
     }
 }
 

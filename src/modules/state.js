@@ -1,7 +1,3 @@
-/*=====================================================================
-  2A Toolbox – state.js
-  State structure
-=====================================================================*/
 
 'use strict';
 
@@ -22,6 +18,8 @@ export const state = {
     soldGuns: [],
     ammo: [],
     currentPage: 'dashboard',
+    // Last page the user was viewing, persisted so a refresh returns them there
+    lastPage: 'dashboard',
     hideSold: false,
     editingGunId: null,
     editingAmmoId: null,
@@ -30,5 +28,15 @@ export const state = {
     editingSessionType: null,
     selectedAmmoForDeduction: null,
     ammoFilter: 'all',
-    ammoThresholds: { ...DEFAULT_AMMO_THRESHOLDS }
+    ammoCategory: 'all',
+    gunFilter: 'all',
+    sessionFilter: 'all',
+    cleaningFilter: 'all',
+    ammoThresholds: { ...DEFAULT_AMMO_THRESHOLDS },
+
+    // CCW / pistol permit tracking
+    permits: [],
+    editingPermitId: null,
+    permitNotifyEnabled: false,
+    permitLeadDays: 30
 };

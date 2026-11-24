@@ -3,15 +3,20 @@
     /* Sidebar */
     .sidebar {
         position: fixed;
-        left: -260px;
+        left: 0;
         top: 0;
         bottom: 0;
+        width: min(260px, 85vw);
+        min-width: 0;
+        max-width: 100vw;
         z-index: 200;
-        transition: left 0.3s ease;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        will-change: transform;
     }
 
     .sidebar.open {
-        left: 0;
+        transform: translateX(0);
         box-shadow: 4px 0 12px rgba(0,0,0,0.5);
     }
 
@@ -174,9 +179,13 @@
         margin-bottom: 14px;
     }
 
-    .filter-chip {
-        padding: 6px 12px;
+    .filter-pill {
+        padding: 6px 10px;
         font-size: 11px;
+    }
+
+    .filter-pills {
+        gap: 6px;
     }
 
     /* Modals */
@@ -331,8 +340,17 @@
 }
 
 @media (max-width: 480px) {
+    .topbar {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
     .topbar-title {
         font-size: 14px;
+    }
+
+    .topbar-actions {
+        gap: 4px;
     }
 
     .btn {
@@ -348,7 +366,123 @@
         font-size: 20px;
     }
 
-    .search-bar {
+    .search-bar,
+    .search-bar:focus {
+        width: 100%;
         max-width: 120px;
+        min-width: 0;
+    }
+
+    /* Filter dropdown fills the row instead of squeezing the label */
+    .ammo-filter-bar {
+        gap: 8px;
+    }
+
+    .filter-select {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        flex: 1 1 100%;
+    }
+
+    .filter-count {
+        margin-left: 0;
+    }
+
+    /* Pills stay tappable at 400px: no forced single row, no clipped labels */
+    .filter-pills {
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+
+    .filter-pill {
+        flex: 1 1 auto;
+        justify-content: center;
+        min-height: 34px;
+        padding: 6px 10px;
+    }
+
+    .filter-switch {
+        min-height: 34px;
+    }
+
+    .content {
+        padding: 12px;
+    }
+
+    /* Sidebar: tighter chrome so labels and counts keep their room */
+    .sidebar-logo {
+        padding: 18px 16px;
+    }
+
+    .sidebar-logo h1 {
+        font-size: 18px;
+    }
+
+    .nav-section {
+        padding: 8px 16px 6px;
+    }
+
+    .nav-item {
+        padding: 10px 16px;
+        gap: 10px;
+        font-size: 13px;
+    }
+
+    .nav-item i {
+        font-size: 15px;
+        width: 18px;
+    }
+
+    .nav-item > .badge {
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        font-size: 10px;
+    }
+}
+
+/* PERMIT CARDS - responsive */
+@media (max-width: 768px) {
+    .permit-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .permit-card {
+        padding: 16px;
+    }
+
+    .permit-dates {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .permit-settings-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .permit-settings-actions {
+        margin-left: 0;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .permit-notify-toggle,
+    .permit-lead-select {
+        width: 100%;
+    }
+
+    .permit-card-head {
+        flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .permit-card {
+        transition: none;
     }
 }
